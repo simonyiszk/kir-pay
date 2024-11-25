@@ -1,0 +1,31 @@
+app:
+  administrator:
+    username: admin
+    password: admin
+  host: api.kir.pay
+  replicas: 1
+  maxBodySize: 10m
+  frontendUrl: https://kir.pay
+  currencySymbol: JMF
+  useIngress: true
+  service:
+    type: ClusterIP
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "750m"
+      memory: "768Mi"
+
+postgresql:
+  enabled: true
+  global:
+    postgresql:
+      auth:
+        database: kir-pay
+        username: username
+        password: password
+  architecture: standalone
+  primary:
+    resourcesPreset: "micro"

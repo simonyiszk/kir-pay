@@ -10,7 +10,7 @@ services:
     networks:
       - network-x
   backend-x:
-    image: ghcr.io/kir-dev/kir-pay:latest
+    image: ghcr.io/simonyiszk/kir-pay
     env_file:
       - .env
     environment:

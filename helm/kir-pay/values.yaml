@@ -21,6 +21,7 @@ app:
 postgresql:
   enabled: true
   global:
+    defaultStorageClass: local-path
     postgresql:
       auth:
         database: kir-pay

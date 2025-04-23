@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ .Release.Name }}
   labels:
-    app: {{ .Chart.Name }}
+    app: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.app.replicas }}
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      app: {{ .Release.Name }}
   template:
     metadata:
-      name: {{ .Chart.Name }}
+      name: {{ .Release.Name }}
       labels:
-        app: {{ .Chart.Name }}
+        app: {{ .Release.Name }}
     spec:
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ .Release.Name }}
           image: ghcr.io/simonyiszk/kir-pay
           imagePullPolicy: Always
           envFrom:
             - secretRef:
-                name: {{ .Chart.Name }}
+                name: {{ .Release.Name }}
           env:
             - name: SERVER_PORT
               value: "8080"
             - name: DATABASE_HOST
-              value: {{ .Chart.Name }}-postgresql:5432
+              value: {{ .Release.Name }}-postgresql:5432
             - name: POSTGRES_DB
               value: {{ .Values.postgresql.global.postgresql.auth.database }}
             - name: CURRENCY_SYMBOL

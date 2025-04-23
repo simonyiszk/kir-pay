@@ -1,16 +1,16 @@
 plugins {
-  kotlin("jvm") version "2.0.21"
-  kotlin("plugin.spring") version "2.0.21"
-  id("org.springframework.boot") version "3.3.5"
-  id("io.spring.dependency-management") version "1.1.6"
+  kotlin("jvm") version "2.1.20"
+  kotlin("plugin.spring") version "2.1.20"
+  id("org.springframework.boot") version "3.4.4"
+  id("io.spring.dependency-management") version "1.1.7"
 }
 
 group = "hu.bme.sch"
-version = "1.0.1"
+version = "1.0.2"
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(21)
+    languageVersion = JavaLanguageVersion.of(23)
   }
 }
 
@@ -26,7 +26,7 @@ repositories {
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -45,7 +45,7 @@ dependencies {
 
 dependencyManagement {
   imports {
-    mavenBom("org.springframework.modulith:spring-modulith-bom:1.2.5")
+    mavenBom("org.springframework.modulith:spring-modulith-bom:1.3.4")
   }
 }
 

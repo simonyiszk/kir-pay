@@ -21,12 +21,16 @@ app:
 postgresql:
   enabled: true
   global:
-    defaultStorageClass: local-path
+#    defaultStorageClass: memory-ssd
     postgresql:
       auth:
         database: kir-pay
-        username: username
+        username: kirpay
         password: password
   architecture: standalone
+  networkPolicy:
+    allowExternal: false
+  persistence:
+    size: 2Gi
   primary:
     resourcesPreset: "micro"

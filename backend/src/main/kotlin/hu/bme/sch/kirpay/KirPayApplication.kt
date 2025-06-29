@@ -6,9 +6,9 @@ import org.springframework.boot.runApplication
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 
-@SpringBootApplication
 @EnableRetry
 @EnableMethodSecurity
+@SpringBootApplication
 @ConfigurationPropertiesScan
 class KirPayApplication
 

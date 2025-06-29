@@ -1,12 +1,12 @@
 plugins {
-  kotlin("jvm") version "2.1.20"
-  kotlin("plugin.spring") version "2.1.20"
-  id("org.springframework.boot") version "3.4.4"
+  kotlin("jvm") version "2.2.0"
+  kotlin("plugin.spring") version "2.2.0"
+  id("org.springframework.boot") version "3.5.3"
   id("io.spring.dependency-management") version "1.1.7"
 }
 
 group = "hu.bme.sch"
-version = "1.0.2"
+version = "1.0.3"
 
 java {
   toolchain {
@@ -26,7 +26,7 @@ repositories {
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -37,7 +37,7 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.springframework.modulith:spring-modulith-starter-core")
   implementation("org.springframework.modulith:spring-modulith-starter-jdbc")
-  developmentOnly("org.springframework.boot:spring-boot-starter-actuator")
+  implementation("org.springframework.boot:spring-boot-starter-actuator")
   developmentOnly("org.springframework.boot:spring-boot-devtools")
   runtimeOnly("org.postgresql:postgresql")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -45,7 +45,7 @@ dependencies {
 
 dependencyManagement {
   imports {
-    mavenBom("org.springframework.modulith:spring-modulith-bom:1.3.4")
+    mavenBom("org.springframework.modulith:spring-modulith-bom:1.4.1")
   }
 }
 

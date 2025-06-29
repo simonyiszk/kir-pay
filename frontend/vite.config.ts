@@ -10,6 +10,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true
+      }
+    }
+  },
   server: {
     host: '0.0.0.0',
     open: true,

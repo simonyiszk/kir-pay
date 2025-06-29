@@ -1,1 +1,1 @@
-rootProject.name = "kir-pay"
+rootProject.name = "kirpay"

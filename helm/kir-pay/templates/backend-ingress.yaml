@@ -1,12 +1,11 @@
-{{ if .Values.app.useIngress }}
+{{ if .Values.app.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Release.Name }}
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.app.maxBodySize }}
-    cert-manager.io/cluster-issuer: le-http01
-    kubernetes.io/tls-acme: 'true'
+  {{- with .Values.app.ingress.annotations }}
+  annotations: {{ toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   ingressClassName: nginx
   tls:
@@ -24,4 +23,14 @@ spec:
                 name: {{ .Release.Name }}
                 port:
                   number: 80
+        {{ if .Values.app.ingress.blockActuatorEndpoints }}
+          - path: /actuator/
+            pathType: Prefix
+            backend:
+              service:
+                name: default-backend
+                port:
+                  number: 80
+        {{ end }}
+
 {{ end }}

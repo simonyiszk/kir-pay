@@ -1,13 +1,57 @@
+frontend:
+  enabled: true
+  image:
+  host: kir.pay
+  strategyType: RollingUpdate
+  replicas: 1
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu:
+      memory:
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      kubernetes.io/tls-acme: 'true'
+      nginx.ingress.kubernetes.io/proxy-body-size: 20m
+  service:
+    type: ClusterIP
+  imagePullPolicy: Always
+  startupProbe:
+    failureThreshold: 60
+    periodSeconds: 5
+  readinessProbe:
+    initialDelaySeconds: 0
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 10
+  livenessProbe:
+    initialDelaySeconds: 0
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 5
+
 app:
+  image: ghcr.io/simonyiszk/kir-pay
   administrator:
     username: admin
     password: admin
   host: api.kir.pay
   replicas: 1
-  maxBodySize: 10m
+  strategyType: RollingUpdate
   frontendUrl: https://kir.pay
   currencySymbol: JMF
-  useIngress: true
+  imagePullPolicy: Always
+  ingress:
+    enabled: true
+    blockActuatorEndpoints: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      kubernetes.io/tls-acme: 'true'
+      nginx.ingress.kubernetes.io/proxy-body-size: 20m
   service:
     type: ClusterIP
   resources:
@@ -15,22 +59,35 @@ app:
       cpu: "500m"
       memory: "512Mi"
     limits:
-      cpu: "750m"
-      memory: "768Mi"
+      cpu:
+      memory:
+  startupProbe:
+    failureThreshold: 60
+    periodSeconds: 5
+  readinessProbe:
+    initialDelaySeconds: 0
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 10
+  livenessProbe:
+    initialDelaySeconds: 0
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 5
 
 postgresql:
   enabled: true
   global:
-#    defaultStorageClass: memory-ssd
+    defaultStorageClass: memory-ssd
     postgresql:
       auth:
         database: kir-pay
         username: kirpay
         password: password
   architecture: standalone
-  networkPolicy:
-    allowExternal: false
-  persistence:
-    size: 2Gi
   primary:
-    resourcesPreset: "micro"
+    networkPolicy:
+      allowExternal: false
+    persistence:
+      size: 2Gi
+    resourcesPreset: "small"

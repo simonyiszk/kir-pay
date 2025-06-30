@@ -1,0 +1,28 @@
+{
+  "theme_color": "#f15b29",
+  "background_color": "#000000",
+  "icons": [
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "icon512_maskable.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "icon512_rounded.png",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait",
+  "display_override": ["fullscreen", "minimal-ui"],
+  "display": "standalone",
+  "dir": "auto",
+  "lang": "hu",
+  "name": "Kir-Pay",
+  "short_name": "Kir-pay",
+  "start_url": "/",
+  "id": "kir-pay",
+  "description": "Contactless payment system proof of concept"
+}

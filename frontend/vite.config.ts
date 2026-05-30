@@ -1,20 +1,20 @@
+import babel from '@rolldown/plugin-babel'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import * as path from 'path'
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import * as path from 'node:path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, 'src')
     }
   },
   build: {
-    rollupOptions: {
-      output: {
-        inlineDynamicImports: true
-      }
+    rolldownOptions: {
+      optimization: { inlineConst: true, pifeForModuleWrappers: true },
+      output: { codeSplitting: false }
     }
   },
   server: {

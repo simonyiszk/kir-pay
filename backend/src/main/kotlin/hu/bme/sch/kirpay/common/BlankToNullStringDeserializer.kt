@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.deser.std.StringDeserializer
-import org.springframework.boot.jackson.JsonComponent
+import org.springframework.boot.jackson.JacksonComponent
 
-@JsonComponent
+@JacksonComponent
 class AppJsonComponent {
 
   class BlankToNullStringDeserializer : JsonDeserializer<String>() {

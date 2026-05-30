@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button.tsx'
 import { Ellipsis } from 'lucide-react'
 import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useState } from 'react'
-import { useQueryClient } from 'react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx'
 import { AccountForm } from '@/page/admin/accounts/AccountForm.tsx'
 import { deleteAccount, disableAccount, enableAccount, updateAccount } from '@/lib/api/admin.api.ts'
@@ -69,7 +69,7 @@ export const AccountActions = ({ account }: { account: Account }) => {
               const action = account.active ? disableAccount : enableAccount
               action(token, account.id!).then((res) => {
                 if (res.result === 'Ok') {
-                  queryClient.invalidateQueries(AppQueryKeys.Accounts)
+                  queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
                 } else {
                   toast({ description: (account.active ? 'Letiltás' : 'Engedélyezés') + ' sikertelen' })
                 }
@@ -82,7 +82,7 @@ export const AccountActions = ({ account }: { account: Account }) => {
             onClick={() =>
               deleteAccount(token, account.id!).then((res) => {
                 if (res.result === 'Ok') {
-                  queryClient.invalidateQueries(AppQueryKeys.Accounts)
+                  queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
                   toast({ description: 'A felhasználó törlése sikeres!' })
                 } else {
                   toast({ description: res.error || 'A felhasználó törlése sikertelen!' })

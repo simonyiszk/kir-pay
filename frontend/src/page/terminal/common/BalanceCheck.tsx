@@ -22,6 +22,7 @@ export const BalanceCheck = ({
   const [error, setError] = useState<string>()
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError(undefined)
     if (!card) return
 

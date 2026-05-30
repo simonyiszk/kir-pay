@@ -126,6 +126,7 @@ export const PrincipalForm = ({
               </FormItem>
             )}
           />
+          {/* eslint-disable-next-line react-hooks/incompatible-library */}
           {form.watch('role') === PrincipalRole.Terminal && (
             <>
               <FormField

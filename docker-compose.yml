@@ -9,6 +9,8 @@ services:
       - database_folder:/var/lib/postgresql/data
     networks:
       - network-x
+    ports:
+      - "5432:5432"
   backend-x:
     image: ghcr.io/simonyiszk/kir-pay
     env_file:

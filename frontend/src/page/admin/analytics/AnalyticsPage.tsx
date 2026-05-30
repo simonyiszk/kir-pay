@@ -1,5 +1,5 @@
 import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useQueries, UseQueryResult } from 'react-query'
+import { useQueries, UseQueryResult } from '@tanstack/react-query'
 import { exportEvents, findAllEvents, getAnalytics } from '@/lib/api/admin.api.ts'
 import { OverviewCard } from '@/components/OverviewCard.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
@@ -105,20 +105,22 @@ export const AnalyticsPage = () => {
   const [page, setPage] = useState(0)
   const { toast } = useToast()
   const { token } = useAppContext()
-  const [analytics, events] = useQueries([
-    {
-      queryKey: [AppQueryKeys.Analytics, token],
-      queryFn: () => getAnalytics(token),
-      refetchInterval: DataRefetchInterval,
-      staleTime: DataRefetchInterval
-    },
-    {
-      queryKey: [AppQueryKeys.Events, token, page],
-      queryFn: () => findAllEvents(token, page, 25),
-      refetchInterval: DataRefetchInterval,
-      staleTime: DataRefetchInterval
-    }
-  ])
+  const [analytics, events] = useQueries({
+    queries: [
+      {
+        queryKey: [AppQueryKeys.Analytics, token],
+        queryFn: () => getAnalytics(token),
+        refetchInterval: DataRefetchInterval,
+        staleTime: DataRefetchInterval
+      },
+      {
+        queryKey: [AppQueryKeys.Events, token, page],
+        queryFn: () => findAllEvents(token, page, 25),
+        refetchInterval: DataRefetchInterval,
+        staleTime: DataRefetchInterval
+      }
+    ]
+  })
 
   return (
     <div className="flex-1 h-full relative">

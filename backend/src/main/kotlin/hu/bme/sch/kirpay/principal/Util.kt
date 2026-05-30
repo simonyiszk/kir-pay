@@ -52,7 +52,7 @@ fun PrincipalDto.toPrincipal(encoder: PasswordEncoder, clock: Clock): Principal 
   return Principal(
     id = null,
     name = name,
-    secret = encoder.encode(password),
+    secret = encoder.encode(password)!!,
     role = role,
     active = active,
     canRedeemVouchers = canRedeemVouchers,

@@ -15,7 +15,8 @@ export const setPersistentState =
   }
 
 export const useNFCScanner = (onScan: (event: NDEFReadingEvent) => void, deps: DependencyList) => {
-  const callback = useCallback(onScan, deps) // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/use-memo, react-hooks/exhaustive-deps
+  const callback = useCallback(onScan, deps)
   useEffect(() => {
     let canProcessEvents = true
     const eventListener = ((e: NDEFReadingEvent) => {

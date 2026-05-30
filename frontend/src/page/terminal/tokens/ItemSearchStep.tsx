@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fuzzySearch } from '@/lib/utils.ts'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form.tsx'
 import { Input } from '@/components/ui/input.tsx'
@@ -10,7 +10,7 @@ import { Toggle } from '@/components/ui/toggle.tsx'
 import { ColorMarker } from '@/components/ColorMarker.tsx'
 import { Item } from '@/lib/api/model.ts'
 import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useQuery } from 'react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { findAllItems } from '@/lib/api/terminal.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
@@ -22,20 +22,21 @@ export const ItemSearchStep = ({ setItem }: { setItem: (item: Item) => void }) =
   const itemsQuery = useQuery({
     queryKey: [AppQueryKeys.Items, token],
     queryFn: () => findAllItems(token),
-    keepPreviousData: true
+    placeholderData: keepPreviousData
   })
   const form = useForm<z.infer<typeof itemNameSchema>>({
     resolver: zodResolver(itemNameSchema),
     defaultValues: { name: '' }
   })
 
-  const items: Item[] = itemsQuery.data?.result === 'Ok' ? itemsQuery.data.data : []
+  const items: Item[] = useMemo(() => (itemsQuery.data?.result === 'Ok' ? itemsQuery.data.data : []), [itemsQuery.data])
   const [selectedItem, setSelectedItem] = useState<Item>()
   const [needle, setNeedle] = useState<string>()
   const [suggestions, setSuggestions] = useState(items)
 
   useEffect(() => {
     if (!needle) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions(items)
       return
     }

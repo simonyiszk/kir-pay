@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button.tsx'
 import { Ellipsis } from 'lucide-react'
 import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useState } from 'react'
-import { useQueryClient } from 'react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx'
 import { PrincipalForm } from '@/page/admin/principals/PrincipalForm.tsx'
 import { deletePrincipal, disablePrincipal, enablePrincipal, updatePrincipal } from '@/lib/api/admin.api.ts'
@@ -69,7 +69,7 @@ export const PrincipalActions = ({ principal }: { principal: Principal }) => {
               const action = principal.active ? disablePrincipal : enablePrincipal
               action(token, principal.id!).then((res) => {
                 if (res.result === 'Ok') {
-                  queryClient.invalidateQueries(AppQueryKeys.Principals)
+                  queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Principals] })
                 } else {
                   toast({ description: (principal.active ? 'Letiltás' : 'Engedélyezés') + ' sikertelen' })
                 }
@@ -83,7 +83,7 @@ export const PrincipalActions = ({ principal }: { principal: Principal }) => {
             onClick={() =>
               deletePrincipal(token, principal.id!).then((res) => {
                 if (res.result === 'Ok') {
-                  queryClient.invalidateQueries(AppQueryKeys.Principals)
+                  queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Principals] })
                   toast({ description: 'A principal törlése sikeres!' })
                 } else {
                   toast({ description: res.error || 'A principal törlése sikertelen!' })

@@ -1,5 +1,5 @@
 import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useQuery, UseQueryResult } from 'react-query'
+import { useQuery, UseQueryResult } from '@tanstack/react-query'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { OrderWithOrderLine, ValidatedApiCall } from '@/lib/api/model.ts'
 import { Card } from '@/components/ui/card.tsx'

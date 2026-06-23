@@ -6,6 +6,7 @@ import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Item } from '@/lib/api/model.ts'
 import { useAppContext } from '@/hooks/useAppContext.ts'
@@ -15,8 +16,11 @@ const itemSchema = z.object({
   alias: z.string().optional(),
   cost: z.coerce.number().finite().int().gte(0),
   stock: z.coerce.number().finite().int().gte(0),
-  enabled: z.boolean()
+  enabled: z.boolean(),
+  showOnLeaderboard: z.boolean()
 })
+
+type ItemOutput = z.infer<typeof itemSchema>
 
 export const ItemForm = ({
   loading,
@@ -30,14 +34,15 @@ export const ItemForm = ({
   defaultItem?: Item
 }) => {
   const { currencySymbol } = useAppContext().config
-  const form = useForm<z.infer<typeof itemSchema>>({
-    resolver: zodResolver(itemSchema),
+  const form = useForm<ItemOutput>({
+    resolver: zodResolver(itemSchema) as Resolver<ItemOutput>,
     defaultValues: {
       name: defaultItem?.name || '',
       alias: defaultItem?.alias || '',
-      cost: defaultItem?.cost || ('' as unknown as number),
+      cost: defaultItem?.cost ?? 0,
       stock: defaultItem?.stock ?? 100000,
-      enabled: defaultItem?.enabled ?? true
+      enabled: defaultItem?.enabled ?? true,
+      showOnLeaderboard: defaultItem?.showOnLeaderboard ?? false
     }
   })
 
@@ -118,6 +123,24 @@ export const ItemForm = ({
                     <FormLabel>Aktív</FormLabel>
                   </div>
                   <FormDescription>Eladható-e a termék</FormDescription>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="showOnLeaderboard"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex flex-col items-start gap-2">
+                  <div className="flex flex-row gap-2">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel>Toplistán látszik</FormLabel>
+                  </div>
+                  <FormDescription>Számít-e a vásárlás a toplistába</FormDescription>
                 </div>
                 <FormMessage />
               </FormItem>

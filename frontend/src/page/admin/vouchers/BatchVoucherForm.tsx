@@ -4,6 +4,7 @@ import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ItemSelect } from '@/page/admin/common/ItemSelect.tsx'
 import { X } from 'lucide-react'
@@ -18,6 +19,8 @@ const voucherSchema = z.object({
   count: z.coerce.number().int().finite().gte(0)
 })
 
+type BatchVoucherOutput = z.infer<typeof voucherSchema>
+
 export const BatchVoucherForm = ({
   loading,
   error,
@@ -27,12 +30,9 @@ export const BatchVoucherForm = ({
   loading: boolean
   onVoucherSubmitted: (voucher: BatchVoucherDto) => void
 }) => {
-  const form = useForm<z.infer<typeof voucherSchema>>({
-    resolver: zodResolver(voucherSchema),
-    defaultValues: {
-      accounts: '',
-      count: '' as unknown as number
-    }
+  const form = useForm<BatchVoucherOutput>({
+    resolver: zodResolver(voucherSchema) as Resolver<BatchVoucherOutput>,
+    defaultValues: { accounts: '', itemId: 0, count: 0 }
   })
 
   return (

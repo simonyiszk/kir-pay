@@ -67,6 +67,7 @@ export type Item = {
   cost: number
   stock: number
   enabled: boolean
+  showOnLeaderboard: boolean
   color?: string
 }
 

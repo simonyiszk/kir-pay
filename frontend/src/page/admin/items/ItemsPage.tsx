@@ -28,6 +28,7 @@ const ItemsTable = ({ items }: { items?: ValidatedApiCall<Item[]> }) => {
           <TableHead>Ár</TableHead>
           <TableHead>Mennyiség raktáron</TableHead>
           <TableHead>Elérhető</TableHead>
+          <TableHead>Toplista</TableHead>
           <TableHead></TableHead>
         </TableRow>
       </TableHeader>
@@ -45,6 +46,7 @@ const ItemsTable = ({ items }: { items?: ValidatedApiCall<Item[]> }) => {
               </TableCell>
               <TableCell>{item.stock} darab</TableCell>
               <TableCell>{item.enabled ? <Check /> : <X />}</TableCell>
+              <TableCell>{item.showOnLeaderboard ? <Check /> : <X />}</TableCell>
               <TableCell>
                 <ItemActions item={item} />
               </TableCell>

@@ -6,6 +6,7 @@ import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Account } from '@/lib/api/model.ts'
 import { useAppContext } from '@/hooks/useAppContext.ts'
@@ -19,6 +20,8 @@ const accountSchema = z.object({
   active: z.coerce.boolean()
 })
 
+type AccountOutput = z.infer<typeof accountSchema>
+
 export const AccountForm = ({
   loading,
   error,
@@ -31,15 +34,15 @@ export const AccountForm = ({
   defaultAccount?: Account
 }) => {
   const { currencySymbol } = useAppContext().config
-  const form = useForm<z.infer<typeof accountSchema>>({
-    resolver: zodResolver(accountSchema),
+  const form = useForm<AccountOutput>({
+    resolver: zodResolver(accountSchema) as Resolver<AccountOutput>,
     defaultValues: {
       name: defaultAccount?.name || '',
       email: defaultAccount?.email || '',
       phone: defaultAccount?.phone || '',
       card: defaultAccount?.card || '',
-      balance: defaultAccount?.balance || ('' as unknown as number),
-      active: defaultAccount?.active || true
+      balance: defaultAccount?.balance ?? 0,
+      active: defaultAccount?.active ?? true
     }
   })
 

@@ -13,6 +13,7 @@ import { Plus, X } from 'lucide-react'
 import { CustomItem } from '@/page/terminal/items/cart.ts'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form.tsx'
 import { useState } from 'react'
@@ -22,6 +23,8 @@ const customItemSchema = z.object({
   name: z.string().min(1),
   price: z.coerce.number().int().finite().gt(0)
 })
+
+type CustomItemOutput = z.infer<typeof customItemSchema>
 
 const NameKey = 'CustomItemName'
 
@@ -50,9 +53,9 @@ export const CustomItemDialog = ({ onSave }: { onSave: (item: CustomItem) => voi
 
 const CustomItemForm = ({ onSave }: { onSave: (item: CustomItem) => void }) => {
   const { currencySymbol } = useAppContext().config
-  const form = useForm<z.infer<typeof customItemSchema>>({
-    resolver: zodResolver(customItemSchema),
-    defaultValues: { name: localStorage.getItem(NameKey) || '' }
+  const form = useForm<CustomItemOutput>({
+    resolver: zodResolver(customItemSchema) as Resolver<CustomItemOutput>,
+    defaultValues: { name: localStorage.getItem(NameKey) || '', price: 0 }
   })
 
   return (

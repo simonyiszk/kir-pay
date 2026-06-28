@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  db-x:
+  kir-pay-db:
     image: postgres:17-alpine
     restart: always
     env_file:
@@ -8,25 +8,34 @@ services:
     volumes:
       - database_folder:/var/lib/postgresql/data
     networks:
-      - network-x
+      - kir-pay-network
     ports:
       - "5432:5432"
-  backend-x:
+  kir-pay-backend:
     image: ghcr.io/simonyiszk/kir-pay
     env_file:
       - .env
     environment:
       SERVER_PORT: 8080
-      DATABASE_HOST: db-x
+      DATABASE_HOST: kir-pay-db
     restart: always
     ports:
       - "8001:8080"
     networks:
-      - network-x
+      - kir-pay-network
     depends_on:
-      - db-x
+      - kir-pay-db
+  kir-pay-frontend:
+    build:
+      context: ./frontend
+    image: ghcr.io/simonyiszk/kir-pay-frontend:latest
+    env_file:
+      - .env
+    restart: always
+    ports:
+      - "3000:80"
 networks:
-  network-x:
+  kir-pay-network:
 volumes:
   database_folder:
     driver: local

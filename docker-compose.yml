@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
   kir-pay-backend:
-    image: ghcr.io/simonyiszk/kir-pay
+    image: ghcr.io/simonyiszk/kir-pay:latest
     env_file:
       - .env
     environment:

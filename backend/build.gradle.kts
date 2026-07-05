@@ -70,7 +70,7 @@ tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("
     "BPE_BPL_JVM_HEAD_ROOM" to "5",
     "BPE_BPL_JVM_LOADED_CLASS_COUNT" to "38000",
 
-    "TRAINING_RUN_JAVA_TOOL_OPTIONS" to "-XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders",
+    "TRAINING_RUN_JAVA_TOOL_OPTIONS" to "-XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders -Dspring.profiles.active=cds-training",
 
     "BPE_PREPEND_JAVA_TOOL_OPTIONS" to "-XX:+UseSerialGC -XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders",
     "BPE_DELIM_JAVA_TOOL_OPTIONS" to " ",

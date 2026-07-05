@@ -4,6 +4,7 @@ import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.transaction.annotation.Transactional
 
 
@@ -12,6 +13,7 @@ data class ImportedPrincipals(val principals: List<PrincipalDto>)
 
 
 @Configuration
+@Profile("!cds-training")
 class PrincipalImporter(
   private val principals: ImportedPrincipals,
   private val principalService: PrincipalService

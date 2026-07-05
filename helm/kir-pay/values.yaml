@@ -1,6 +1,6 @@
 frontend:
   enabled: true
-  image:
+  image: ghcr.io/simonyiszk/kir-pay-frontend:latest
   host: kir.pay
   strategyType: RollingUpdate
   replicas: 1
@@ -78,6 +78,8 @@ app:
 postgresql:
   enabled: true
   global:
+    security:
+      allowInsecureImages: true # TODO fix https://github.com/bitnami/containers/issues/83267
     defaultStorageClass: memory-ssd
     postgresql:
       auth:
@@ -85,6 +87,30 @@ postgresql:
         username: kirpay
         password: password
   architecture: standalone
+  image:
+    repository: bitnamilegacy/postgresql
+  metrics:
+    enabled: true
+    image:
+      repository: bitnamilegacy/postgres-exporter
+    serviceMonitor:
+      relabelings:
+        - sourceLabels: [ __meta_kubernetes_pod_name ]
+          targetLabel: instance
+          action: replace
+      enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+        ephemeral-storage: 50Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
+        ephemeral-storage: 50Mi
+  volumePermissions:
+    image:
+      repository: bitnamilegacy/os-shell
   primary:
     networkPolicy:
       allowExternal: false

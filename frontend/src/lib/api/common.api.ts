@@ -18,7 +18,7 @@ export type AppQueryKeys = (typeof AppQueryKeys)[keyof typeof AppQueryKeys]
 
 export const createToken = (username: string, password: string) => `Basic ${btoa(`${username}:${password}`)}`
 
-export const getApiRoot = () => `${import.meta.env.VITE_BACKEND_URL}/v1/api`
+export const getApiRoot = () => `${window.config.BACKEND_URL}/v1/api`
 
 export const addColorToResponse = <T extends { id?: number }>(res: Response): Promise<T> =>
   res.json().then((data: T) => ({ ...data, color: getHashedColor(data.id?.toString() ?? '') }))

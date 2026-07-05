@@ -9,21 +9,17 @@ import org.springframework.security.provisioning.UserDetailsManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
 
 @Service
 @Transactional
-@OptIn(ExperimentalContracts::class)
 class PrincipalAuthenticationDetailsManager(
   private val principalRepository: PrincipalRepository,
   private val events: ApplicationEventPublisher,
   private val clock: Clock
 ) : UserDetailsManager {
 
-  override fun loadUserByUsername(username: String?): UserDetails {
-    validateText(username, "A felhasználó kereséshez nem lett felhasználónév megadva")
+  override fun loadUserByUsername(username: String): UserDetails {
     val principal = principalRepository.findByName(username)
       ?: throw UsernameNotFoundException("Felhasználó '$username' nem található!")
 
@@ -32,14 +28,12 @@ class PrincipalAuthenticationDetailsManager(
   }
 
 
-  override fun createUser(user: UserDetails?) {
-    validateUser(user, "A felhasználót nem lehet létrehozni, az adatok formátuma helytelen!")
-
+  override fun createUser(user: UserDetails) {
     val createdAt = clock.millis()
     val principal = Principal(
       id = null,
-      name = user.username,
-      secret = user.password,
+      name = requireNotNull(user.username) { "Username must not be null" },
+      secret = requireNotNull(user.password) { "Password must not be null" },
       active = user.isEnabled,
       role = Role.TERMINAL,
       canRedeemVouchers = false,
@@ -56,14 +50,13 @@ class PrincipalAuthenticationDetailsManager(
   }
 
 
-  override fun updateUser(user: UserDetails?) {
-    validateUser(user, "A felhasználót nem lehet módosítani, az adatok formátuma helytelen!")
+  override fun updateUser(user: UserDetails) {
     val principal = principalRepository.findByName(user.username)
       ?: throw UsernameNotFoundException("A felhasználót nem lehet módosítani, '${user.username}' nem található!")
 
     val newPrincipal = principal.copy(
-      name = user.username,
-      secret = user.password,
+      name = requireNotNull(user.username) { "Username must not be null" },
+      secret = requireNotNull(user.password) { "Password must not be null" },
       active = user.isEnabled
     ).copyWithAuthorities(user.authorities)
 
@@ -72,8 +65,7 @@ class PrincipalAuthenticationDetailsManager(
   }
 
 
-  override fun deleteUser(username: String?) {
-    validateText(username, "A felhasználó törléséhez nem lett felhasználónév megadva!")
+  override fun deleteUser(username: String) {
     val principal = principalRepository.findByName(username)
       ?: throw IllegalArgumentException("A felhasználót nem lehet törölni, mert nem létezik!")
 
@@ -83,12 +75,11 @@ class PrincipalAuthenticationDetailsManager(
 
 
   override fun changePassword(oldPassword: String?, newPassword: String?) {
-    validateText(newPassword, "Nincs megadva jelszó a módosításhoz!")
+    requireNotNull(newPassword) { "Kötelező jelszót megadni!" }
     val currentUser = SecurityContextHolder.getContextHolderStrategy().context.authentication
       ?: throw AccessDeniedException("Nem lehet módosítani a jelszavat, mivel a felhasználó nincs belépve!")
 
     val username = currentUser.name
-    validateText(username, "A jelszó módosításhoz nem lett felhasználónév megadva!")
 
     val principal = principalRepository.findByName(username)
       ?: throw UsernameNotFoundException("Nem lehet módosítani a felhasználót, '${username}' nem található!")
@@ -97,30 +88,8 @@ class PrincipalAuthenticationDetailsManager(
   }
 
 
-  override fun userExists(username: String?): Boolean {
-    if (username.isNullOrBlank()) return false
+  override fun userExists(username: String): Boolean {
     return principalRepository.findByName(username) != null
-  }
-
-
-  private final fun validateText(username: String?, message: String) {
-    contract {
-      returns() implies (username != null)
-    }
-    if (username.isNullOrBlank()) throw IllegalArgumentException(message)
-  }
-
-
-  private final fun validateUser(user: UserDetails?, message: String) {
-    contract {
-      returns() implies (user != null)
-    }
-    if (user == null) throw IllegalArgumentException(message)
-    validateText(user.username, message)
-    validateText(user.password, message)
-
-    if (user.authorities == null) throw IllegalArgumentException(message)
-    if (user.authorities.any { it == null || it.authority.isNullOrBlank() }) throw IllegalArgumentException(message)
   }
 
 }

@@ -3,7 +3,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button.tsx'
 import { Ellipsis } from 'lucide-react'
 import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useQueryClient } from 'react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { deleteVoucher, updateVoucher } from '@/lib/api/admin.api.ts'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { useToast } from '@/components/ui/use-toast.ts'
@@ -26,7 +26,7 @@ export const VoucherActions = ({ voucher }: { voucher: Voucher }) => {
             onClick={() =>
               updateVoucher(token, voucher.id!, { count: voucher.count + 1 }).then((res) => {
                 if (res.result === 'Ok') {
-                  queryClient.invalidateQueries(AppQueryKeys.Vouchers)
+                  queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Vouchers] })
                   toast({ description: 'Ajándékozás sikeres!' })
                 } else {
                   toast({ description: res.error || 'Ajándékozás sikertelen!' })
@@ -41,7 +41,7 @@ export const VoucherActions = ({ voucher }: { voucher: Voucher }) => {
               onClick={() =>
                 updateVoucher(token, voucher.id!, { count: voucher.count - 1 }).then((res) => {
                   if (res.result === 'Ok') {
-                    queryClient.invalidateQueries(AppQueryKeys.Vouchers)
+                    queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Vouchers] })
                     toast({ description: 'Elvétel sikeres!' })
                   } else {
                     toast({ description: res.error || 'Elvétel sikertelen!' })
@@ -57,7 +57,7 @@ export const VoucherActions = ({ voucher }: { voucher: Voucher }) => {
               onClick={() =>
                 updateVoucher(token, voucher.id!, { count: 0 }).then((res) => {
                   if (res.result === 'Ok') {
-                    queryClient.invalidateQueries(AppQueryKeys.Vouchers)
+                    queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Vouchers] })
                     toast({ description: 'Elvétel sikeres!' })
                   } else {
                     toast({ description: res.error || 'Elvétel sikertelen!' })
@@ -72,7 +72,7 @@ export const VoucherActions = ({ voucher }: { voucher: Voucher }) => {
             onClick={() =>
               deleteVoucher(token, voucher.id!).then((res) => {
                 if (res.result === 'Ok') {
-                  queryClient.invalidateQueries(AppQueryKeys.Vouchers)
+                  queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Vouchers] })
                   toast({ description: 'A utalvány törlése sikeres!' })
                 } else {
                   toast({ description: res.error || 'A utalvány törlése sikertelen!' })

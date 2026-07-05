@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createRootRoute, createRoute, createRouter, Link, Outlet } from '@tanstack/react-router'
 import { FileQuestion } from 'lucide-react'
 import { AppRoot } from '@/AppRoot.tsx'
@@ -8,10 +9,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { buttonVariants } from '@/components/ui/button.props.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 
-const TanStackRouterDevtools =
-  process.env.NODE_ENV === 'production'
-    ? () => null
-    : lazy(() => import('@tanstack/router-devtools').then((res) => ({ default: res.TanStackRouterDevtools })))
+const TanStackRouterDevtools = import.meta.env.PROD
+  ? () => null
+  : lazy(() => import('@tanstack/router-devtools').then((res) => ({ default: res.TanStackRouterDevtools })))
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -27,8 +27,8 @@ const rootRoute = createRootRoute({
     </>
   ),
   notFoundComponent: () => (
-    <div className="flex items-center justify-center w-full h-full min-h-[100vh] p-4">
-      <Card className="w-[auto]">
+    <div className="flex items-center justify-center w-full h-full min-h-screen p-4">
+      <Card className="w-auto">
         <CardHeader>
           <CardTitle>
             <FileQuestion className="px-1 inline" /> Kicsit eltévedtél
@@ -60,7 +60,13 @@ const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'admin',
   component: () => (
-    <Suspense fallback={<LoadingIndicator />}>
+    <Suspense
+      fallback={
+        <div className="h-lvh flex justify-center">
+          <LoadingIndicator />
+        </div>
+      }
+    >
       <AdminRoot />
     </Suspense>
   )

@@ -1,6 +1,6 @@
 import { ValidatedApiCall, Voucher } from '@/lib/api/model.ts'
 import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { findAllVouchers } from '@/lib/api/admin.api.ts'
 import { VoucherManagementDropdown } from '@/page/admin/vouchers/VoucherManagementDropdown.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'

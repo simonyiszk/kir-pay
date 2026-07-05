@@ -4,13 +4,13 @@ import { CustomItemDialog } from '@/page/terminal/items/CustomItemDialog.tsx'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fuzzySearch } from '@/lib/utils.ts'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form.tsx'
 import { Input } from '@/components/ui/input.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import { Item } from '@/lib/api/model.ts'
-import { useQuery } from 'react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { useAppContext } from '@/hooks/useAppContext.ts'
 import { findAllItems } from '@/lib/api/terminal.api.ts'
@@ -37,7 +37,7 @@ export const ItemAddStep = ({
   const itemsQuery = useQuery({
     queryKey: [AppQueryKeys.Items, token],
     queryFn: () => findAllItems(token),
-    keepPreviousData: true
+    placeholderData: keepPreviousData
   })
   const form = useForm<z.infer<typeof itemNameSchema>>({
     resolver: zodResolver(itemNameSchema),
@@ -47,9 +47,10 @@ export const ItemAddStep = ({
   const [itemSuggestions, setItemSuggestions] = useState<Item[]>()
   const [customItemSuggestions, setCustomItemSuggestions] = useState<CustomCartEntry[]>()
 
-  const items: Item[] = itemsQuery.data?.result === 'Ok' ? itemsQuery.data.data : []
+  const items: Item[] = useMemo(() => (itemsQuery.data?.result === 'Ok' ? itemsQuery.data.data : []), [itemsQuery.data])
   useEffect(() => {
     if (!needle) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setItemSuggestions(items)
       setCustomItemSuggestions(cart.customEntries)
       return

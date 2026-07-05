@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button.tsx'
 import { Ellipsis } from 'lucide-react'
 import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useState } from 'react'
-import { useQueryClient } from 'react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx'
 import { ItemForm } from '@/page/admin/items/ItemForm.tsx'
 import { deleteItem, disableItem, enableItem, updateItem } from '@/lib/api/admin.api.ts'
@@ -69,7 +69,7 @@ export const ItemActions = ({ item }: { item: Item }) => {
               const action = item.enabled ? disableItem : enableItem
               action(token, item.id!).then((res) => {
                 if (res.result === 'Ok') {
-                  queryClient.invalidateQueries(AppQueryKeys.Items)
+                  queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Items] })
                 } else {
                   toast({ description: (item.enabled ? 'Letiltás' : 'Engedélyezés') + ' sikertelen' })
                 }
@@ -83,7 +83,7 @@ export const ItemActions = ({ item }: { item: Item }) => {
             onClick={() =>
               deleteItem(token, item.id!).then((res) => {
                 if (res.result === 'Ok') {
-                  queryClient.invalidateQueries(AppQueryKeys.Items)
+                  queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Items] })
                   toast({ description: 'A termék törlése sikeres!' })
                 } else {
                   toast({ description: res.error || 'A termék törlése sikertelen!' })

@@ -46,8 +46,9 @@ create table if not exists items
     name    text    not null,
     alias   text,
     cost    bigint  not null check ( cost >= 0 ),
-    stock   integer not null check ( stock >= 0 ),
-    enabled Boolean not null
+    stock               integer not null check ( stock >= 0 ),
+    enabled             boolean not null,
+    show_on_leaderboard boolean not null default false
 );
 select setval('items_id_seq', greatest(100000, coalesce((select max(id) from items), 0) + 1));
 create index if not exists items_name_index on items (name);

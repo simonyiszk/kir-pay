@@ -16,6 +16,7 @@ class OrderAdminController(
   private val orderService: OrderService,
   private val orderLineService: OrderLineService,
   private val voucherService: VoucherService,
+  private val orderRepository: OrderRepository,
 ) {
   private val orderParser = parserFactory.getParserForType(Order::class)
   private val orderLineParser = parserFactory.getParserForType(OrderLine::class)
@@ -135,5 +136,9 @@ class OrderAdminController(
       .asFileAttachment("vouchers-template.csv")
       .body(voucherParser.toCsv(vouchers))
   }
+
+
+  @GetMapping("/consumption-leaderboard")
+  fun getConsumptionLeaderboard() = orderRepository.findConsumptionLeaderboard()
 
 }

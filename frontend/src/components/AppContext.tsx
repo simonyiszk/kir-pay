@@ -1,7 +1,7 @@
 import { FC, PropsWithChildren, useState } from 'react'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { NoPermissionBanner } from '@/components/NoPermissionBanner.tsx'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { AppContext, AppData } from '@/hooks/useAppContext'
 import { LoginDialog } from '@/components/LoginDialog.tsx'
 import { getAppData } from '@/lib/api/terminal.api.ts'
@@ -13,7 +13,9 @@ const TokenKey = 'AuthToken'
 export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem(TokenKey))
   const persistentTokenSetter = setPersistentState(TokenKey, setToken)
-  const appQuery = useQuery([AppQueryKeys.App, token], () => getAppData(token!), {
+  const appQuery = useQuery({
+    queryKey: [AppQueryKeys.App, token],
+    queryFn: () => getAppData(token!),
     enabled: !!TokenKey,
     select: (data) => {
       if (data.result !== 'Ok') {

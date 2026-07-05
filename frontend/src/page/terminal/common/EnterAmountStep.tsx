@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form.tsx'
 import { Input } from '@/components/ui/input.tsx'
@@ -10,13 +11,13 @@ const paymentDetailsSchema = z.object({
   amount: z.coerce.number().int().finite().gt(0)
 })
 
+type PaymentOutput = z.infer<typeof paymentDetailsSchema>
+
 export const EnterAmountStep = ({ setAmount, title }: { title?: string; setAmount: (amount: number) => void }) => {
   const { currencySymbol } = useAppContext().config
-  const form = useForm<z.infer<typeof paymentDetailsSchema>>({
-    resolver: zodResolver(paymentDetailsSchema),
-    defaultValues: {
-      amount: '' as never as number
-    }
+  const form = useForm<PaymentOutput>({
+    resolver: zodResolver(paymentDetailsSchema) as Resolver<PaymentOutput>,
+    defaultValues: { amount: 0 }
   })
 
   return (

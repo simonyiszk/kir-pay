@@ -20,8 +20,13 @@ spec:
     spec:
       containers:
         - name: {{ .Release.Name }}-frontend
-          image: harbor.sch.bme.hu/org-kir-dev/kir-pay-snyt:latest
+          image: {{ .Values.frontend.image }}
           imagePullPolicy: {{ .Values.frontend.imagePullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-frontend-config
+          securityContext:
+            runAsUser: 101
           ports:
             - containerPort: 80
               protocol: TCP

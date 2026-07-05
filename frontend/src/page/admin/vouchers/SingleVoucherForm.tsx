@@ -4,6 +4,7 @@ import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Voucher } from '@/lib/api/model.ts'
 import { AccountSelect } from '@/page/admin/common/AccountSelect.tsx'
@@ -15,6 +16,8 @@ const voucherSchema = z.object({
   count: z.coerce.number().int().finite().gte(0)
 })
 
+type VoucherOutput = z.infer<typeof voucherSchema>
+
 export const SingleVoucherForm = ({
   loading,
   error,
@@ -24,9 +27,9 @@ export const SingleVoucherForm = ({
   loading: boolean
   onVoucherSubmitted: (voucher: Voucher) => void
 }) => {
-  const form = useForm<z.infer<typeof voucherSchema>>({
-    resolver: zodResolver(voucherSchema),
-    defaultValues: { count: '' as unknown as number }
+  const form = useForm<VoucherOutput>({
+    resolver: zodResolver(voucherSchema) as Resolver<VoucherOutput>,
+    defaultValues: { accountId: 0, itemId: 0, count: 0 }
   })
 
   return (

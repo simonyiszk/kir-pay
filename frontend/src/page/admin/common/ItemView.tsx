@@ -1,4 +1,4 @@
-import { useQuery } from 'react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useAppContext } from '@/hooks/useAppContext.ts'
 import { ReactNode } from 'react'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
@@ -27,7 +27,7 @@ export const ItemView = ({
       return item.data
     },
     queryKey: [AppQueryKeys.Items, token, itemId],
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     staleTime: 30000
   })
 

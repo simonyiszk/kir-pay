@@ -2,7 +2,7 @@ import { Item, ValidatedApiCall } from '@/lib/api/model.ts'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.tsx'
 import { Check, X } from 'lucide-react'
 import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { findAllItems } from '@/lib/api/admin.api.ts'
@@ -28,6 +28,7 @@ const ItemsTable = ({ items }: { items?: ValidatedApiCall<Item[]> }) => {
           <TableHead>Ár</TableHead>
           <TableHead>Mennyiség raktáron</TableHead>
           <TableHead>Elérhető</TableHead>
+          <TableHead>Toplista</TableHead>
           <TableHead></TableHead>
         </TableRow>
       </TableHeader>
@@ -45,6 +46,7 @@ const ItemsTable = ({ items }: { items?: ValidatedApiCall<Item[]> }) => {
               </TableCell>
               <TableCell>{item.stock} darab</TableCell>
               <TableCell>{item.enabled ? <Check /> : <X />}</TableCell>
+              <TableCell>{item.showOnLeaderboard ? <Check /> : <X />}</TableCell>
               <TableCell>
                 <ItemActions item={item} />
               </TableCell>

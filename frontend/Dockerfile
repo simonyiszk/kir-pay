@@ -1,14 +1,29 @@
-FROM docker.io/node:22-alpine AS build
+FROM docker.io/node:24-alpine AS build
+
+WORKDIR /app
 
 COPY package.json ./
-COPY yarn.lock ./
-RUN yarn
+COPY package-lock.json ./
+RUN npm ci
 
 COPY . .
-RUN yarn run build
+COPY .env.docker .env
+
+RUN npm run build
 
 
 FROM docker.io/nginx:stable-alpine AS production
 
-COPY --from=build /dist /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
+
+RUN sed -i '/^user /d' /etc/nginx/nginx.conf && \
+    touch /run/nginx.pid && \
+    chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /run
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 80
+
+ENTRYPOINT ["/entrypoint.sh"]

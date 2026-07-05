@@ -1,4 +1,4 @@
-import { useQuery } from 'react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useAppContext } from '@/hooks/useAppContext.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { fuzzySearch } from '@/lib/utils.ts'
@@ -18,7 +18,11 @@ import { AppQueryKeys } from '@/lib/api/common.api.ts'
 
 export const SelectAccountStep = ({ setAccount }: { setAccount: (account: Account) => void }) => {
   const { token } = useAppContext()
-  const accountsQuery = useQuery([AppQueryKeys.Accounts, token], () => findAllAccounts(token), { keepPreviousData: true })
+  const accountsQuery = useQuery({
+    queryKey: [AppQueryKeys.Accounts, token],
+    queryFn: () => findAllAccounts(token),
+    placeholderData: keepPreviousData
+  })
 
   return (
     <>
@@ -53,6 +57,7 @@ const SelectAccount = ({ accounts, setAccount }: { accounts: Account[]; setAccou
   useEffect(() => {
     const haystack = accounts
     if (!needle) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions(haystack)
       return
     }

@@ -1,5 +1,5 @@
 import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useQuery, UseQueryResult } from 'react-query'
+import { useQuery, UseQueryResult } from '@tanstack/react-query'
 import { exportTransactions, findAllTransactions } from '@/lib/api/admin.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { Transaction, ValidatedApiCall } from '@/lib/api/model.ts'

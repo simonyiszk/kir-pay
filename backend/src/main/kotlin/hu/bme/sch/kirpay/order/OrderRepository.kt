@@ -35,20 +35,36 @@ interface OrderRepository : CrudRepository<Order, Int> {
 
   @Query(
     """select o.id  as order_id,
-              o.account_id,
-              o.timestamp,
-              ol.id as order_line_id,
-              ol.item_id,
-              ol.item_count,
-              ol.message,
-              ol.used_voucher,
-              ol.paid_amount
-       from orders o
-                inner join order_lines ol on o.id = ol.order_id
-       order by o.timestamp desc, ol.id asc
-       offset :skip rows fetch next :take rows only"""
+               o.account_id,
+               o.timestamp,
+               ol.id as order_line_id,
+               ol.item_id,
+               ol.item_count,
+               ol.message,
+               ol.used_voucher,
+               ol.paid_amount
+        from orders o
+                 inner join order_lines ol on o.id = ol.order_id
+        order by o.timestamp desc, ol.id asc
+        offset :skip rows fetch next :take rows only"""
   )
   fun findAllOrderWithOrderLinesOrderByTimestampDescPaginated(skip: Long, take: Int): List<OrderWithOrderLine>
+
+
+  @Query(
+    """select a.id as account_id,
+               a.name,
+               a.email,
+               coalesce(sum(ol.item_count), 0) as item_count
+        from accounts a
+                 inner join orders o on o.account_id = a.id
+                 inner join order_lines ol on ol.order_id = o.id
+                 inner join items i on i.id = ol.item_id
+        where i.show_on_leaderboard = true and a.active = true
+        group by a.id, a.name, a.email
+        order by item_count desc"""
+  )
+  fun findConsumptionLeaderboard(): List<ConsumptionLeaderboardEntry>
 
 }
 

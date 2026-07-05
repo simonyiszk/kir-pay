@@ -46,7 +46,8 @@ data class Item(
   val alias: String?,
   val cost: Long,
   val stock: Int,
-  val enabled: Boolean
+  val enabled: Boolean,
+  val showOnLeaderboard: Boolean = false
 )
 
 
@@ -56,4 +57,12 @@ data class Voucher(
   val accountId: Int?,
   val itemId: Int,
   val count: Int
+)
+
+
+data class ConsumptionLeaderboardEntry(
+  val accountId: Int,
+  val name: String,
+  val email: String?,
+  val itemCount: Long
 )

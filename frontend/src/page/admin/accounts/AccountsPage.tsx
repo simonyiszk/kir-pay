@@ -1,6 +1,6 @@
 import { Account, ValidatedApiCall } from '@/lib/api/model.ts'
 import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { findAllAccounts } from '@/lib/api/terminal.api.ts'
 import { AccountManagementDropdown } from '@/page/admin/accounts/AccountManagementDropdown.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'

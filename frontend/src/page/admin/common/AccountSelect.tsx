@@ -1,5 +1,5 @@
 import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.tsx'

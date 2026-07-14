@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { DependencyList, useCallback, useEffect } from 'react'
+import { DependencyList, useEffect, useRef } from 'react'
 import { filter } from 'fuzzy'
 
 export function cn(...inputs: ClassValue[]) {
@@ -15,26 +15,22 @@ export const setPersistentState =
   }
 
 export const useNFCScanner = (onScan: (event: NDEFReadingEvent) => void, deps: DependencyList) => {
-  // eslint-disable-next-line react-hooks/use-memo, react-hooks/exhaustive-deps
-  const callback = useCallback(onScan, deps)
+  const onScanRef = useRef(onScan)
   useEffect(() => {
-    let canProcessEvents = true
-    const eventListener = ((e: NDEFReadingEvent) => {
-      if (!canProcessEvents) {
-        e.stopImmediatePropagation()
-      } else {
-        callback(e)
-      }
-    }) as EventListenerOrEventListenerObject
+    onScanRef.current = onScan
+  }, [onScan])
 
+  useEffect(() => {
+    const abortController = new AbortController()
     const ndef = new NDEFReader()
-    ndef.scan().then(() => ndef.addEventListener('reading', eventListener, true))
+    const callback = ((e: NDEFReadingEvent) => onScanRef.current?.(e)) as EventListenerOrEventListenerObject
+    ndef
+      .scan({ signal: abortController.signal })
+      .then(() => ndef.addEventListener('reading', callback, { signal: abortController.signal, once: true }))
 
-    return () => {
-      canProcessEvents = false
-      ndef.removeEventListener('reading', eventListener, true)
-    }
-  }, [...deps, callback]) // eslint-disable-line react-hooks/exhaustive-deps
+    return () => abortController.abort()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
 }
 
 const murmurHash = (x: number): number => {

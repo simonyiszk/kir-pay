@@ -1,4 +1,4 @@
-import Lottie from 'lottie-react'
+import Lottie from '@/components/Lottie'
 import checkAnimation from '@/assets/checkAnimation.json'
 import { ReactNode, useEffect, useState } from 'react'
 import { CashRegisterAudio } from '@/assets/CashRegisterAudio.ts'
@@ -11,6 +11,7 @@ export default function CheckAnimation({ children }: { children?: ReactNode }) {
   }, [])
 
   if (!showAnimation) return <>{children}</>
+
   return (
     <div className="w-full flex items-center justify-center">
       <Lottie

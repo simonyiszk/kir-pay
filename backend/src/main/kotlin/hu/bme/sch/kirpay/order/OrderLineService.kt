@@ -8,6 +8,9 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class OrderLineService(private val orderLineRepository: OrderLineRepository) {
 
+  fun getConsumptionLeaderboardByItem(limit: Int) = orderLineRepository.getItemConsumptionLeaderboard(if (limit < 0) Int.MAX_VALUE else limit)
+
+
   fun save(orderLine: OrderLine): OrderLine = orderLineRepository.save(orderLine)
 
 

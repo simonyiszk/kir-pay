@@ -30,7 +30,7 @@ class OrderService(
   fun findAllOrdersWithOrderLines() = orderRepository.findAllOrderWithOrderLinesOrderByTimestampDesc()
 
 
-  fun getConsumptionLeaderboard() = orderRepository.findConsumptionLeaderboard()
+  fun getConsumptionLeaderboard(limit: Int) = orderRepository.findConsumptionLeaderboard(if (limit < 0) Int.MAX_VALUE else limit)
 
 
   fun findAllOrdersWithOrderLinesPaginated(page: Int, size: Int): List<OrderWithOrderLine> =

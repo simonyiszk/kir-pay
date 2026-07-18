@@ -200,3 +200,18 @@ export const ResultType = {
 export type ResultType = (typeof ResultType)[keyof typeof ResultType]
 export type ErrorResultType = Exclude<(typeof ResultType)[keyof typeof ResultType], typeof ResultType.Ok>
 export type OkResultType = typeof ResultType.Ok
+
+export type ConsumptionLeaderboardEntry = {
+  accountId: number
+  name: string
+  email?: string
+  itemCount: number
+  color?: string
+}
+
+export type ItemLeaderboardEntry = {
+  itemId: number
+  itemName: string
+  itemCount: number
+  color?: string
+}

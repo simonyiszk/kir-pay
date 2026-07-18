@@ -69,6 +69,13 @@ data class VoucherWithItemName(
 )
 
 
+data class ItemConsumptionLeaderboardEntry(
+  val itemId: Int,
+  val itemName: String,
+  val itemCount: Long
+)
+
+
 data class ConsumptionLeaderboardEntry(
   val accountId: Int,
   val name: String,

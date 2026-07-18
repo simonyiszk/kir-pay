@@ -60,11 +60,14 @@ interface OrderRepository : CrudRepository<Order, Int> {
                  inner join orders o on o.account_id = a.id
                  inner join order_lines ol on ol.order_id = o.id
                  inner join items i on i.id = ol.item_id
-        where i.show_on_leaderboard = true and a.active = true
+        where i.enabled = true
+          and i.show_on_leaderboard = true
+          and a.active = true
         group by a.id, a.name, a.email
-        order by item_count desc"""
+        order by item_count desc
+        limit :limit"""
   )
-  fun findConsumptionLeaderboard(): List<ConsumptionLeaderboardEntry>
+  fun findConsumptionLeaderboard(limit: Int): List<ConsumptionLeaderboardEntry>
 
 }
 
@@ -93,7 +96,7 @@ interface VoucherRepository : CrudRepository<Voucher, Int> {
 
 
   @Query("""
-select vouchers.id as voucher_id, account_id, item_id, i.name as item_name, vouchers.count
+    select vouchers.id as voucher_id, account_id, item_id, i.name as item_name, vouchers.count
     from vouchers
          inner join public.items i on i.id = vouchers.item_id
     where account_id = :accountId
@@ -121,4 +124,16 @@ interface OrderLineRepository : CrudRepository<OrderLine, Int> {
   @Query("select * from order_lines order by order_id desc offset :skip rows fetch next :take rows only")
   fun findAllOrderByOrderIdDescPaginated(skip: Long, take: Int): List<OrderLine>
 
+
+  @Query("""
+    select sum(o.item_count) as item_count, i.id as item_id, i.name as item_name
+    from items i
+             inner join order_lines o on i.id = o.item_id
+    where i.enabled = true
+      and i.show_on_leaderboard = true
+    group by i.id
+    order by item_count desc
+    limit :limit
+  """)
+  fun getItemConsumptionLeaderboard(limit: Int): List<ItemConsumptionLeaderboardEntry>
 }

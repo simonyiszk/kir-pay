@@ -10,7 +10,7 @@ export const CardCheckStep = ({ onReset, onProceed, card }: { onReset: () => voi
 
   useEffect(() => {
     findAccountByCard(token, card).then((response) => {
-      if (response.result === 'Ok' && response.data.id !== undefined) {
+      if (response.result === 'Ok' && response.data.account.id !== undefined) {
         setShowPrompt(true)
       } else {
         onProceed()

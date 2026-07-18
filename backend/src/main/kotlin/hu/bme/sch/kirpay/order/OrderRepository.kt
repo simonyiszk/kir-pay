@@ -92,6 +92,15 @@ interface VoucherRepository : CrudRepository<Voucher, Int> {
   fun findByAccountAndItem(accountId: Int, itemId: Int): Voucher?
 
 
+  @Query("""
+select vouchers.id as voucher_id, account_id, item_id, i.name as item_name, vouchers.count
+    from vouchers
+         inner join public.items i on i.id = vouchers.item_id
+    where account_id = :accountId
+  """)
+  fun findAllByAccountIdWithItemName(accountId: Int): List<VoucherWithItemName>
+
+
   @Query("select * from vouchers order by account_id")
   fun findAllOrderByAccountId(): List<Voucher>
 

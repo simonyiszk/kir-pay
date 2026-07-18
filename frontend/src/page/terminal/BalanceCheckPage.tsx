@@ -19,7 +19,7 @@ const BalanceCheckPage = () => {
     <div className="flex items-center flex-col gap-4">
       <h1 className="font-bold text-2xl pb-2 text-center">Érints kártyát az eszközhöz...</h1>
 
-      <BalanceCheck card={card} loading={loading} setLoading={setLoading} />
+      <BalanceCheck showVouchers={true} card={card} loading={loading} setLoading={setLoading} />
       {card && !loading && (
         <Button
           variant="secondary"

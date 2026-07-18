@@ -1,5 +1,6 @@
 package hu.bme.sch.kirpay.order
 
+import hu.bme.sch.kirpay.account.Account
 import hu.bme.sch.kirpay.common.BadRequestException
 import hu.bme.sch.kirpay.principal.PermissionName
 import hu.bme.sch.kirpay.principal.getLoggedInPrincipal
@@ -115,5 +116,10 @@ class VoucherService(
     if (line.itemId == null) throw BadRequestException("Imseretlen utalvány")
     if (line.itemCount <= 0) throw BadRequestException("Legalább egy egységnyit szükséges megadni a tételből!")
   }
+
+  data class AccountWithVouchers(val account: Account, val vouchers: List<VoucherWithItemName>)
+
+  fun getVouchersWithAccount(account: Account) =
+    AccountWithVouchers(account, voucherRepository.findAllByAccountIdWithItemName(account.id!!))
 
 }

@@ -16,7 +16,7 @@ export const TransferAmountEnterStep = ({
   return (
     <>
       <h1 className="font-bold text-2xl pb-2 text-center">Add meg az átruházandó mennyiséget!</h1>
-      <BalanceCheck loading={loading} setLoading={setLoading} card={sender} />
+      <BalanceCheck showVouchers={false} loading={loading} setLoading={setLoading} card={sender} />
       <div className="w-full">
         <EnterAmountStep setAmount={setAmount} />
         <Button variant="secondary" className="mt-2 w-full" onClick={onAbort}>

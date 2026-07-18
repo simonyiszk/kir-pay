@@ -61,6 +61,11 @@ class AccountService(
     accountRepository.findActiveAccountByCard(card) ?: throw NotFoundException("A kártyához nincs számla rendelve!")
 
 
+  fun findByEmail(email: String): Account =
+    accountRepository.findActiveAccountByEmail(email)
+      ?: throw NotFoundException("Nincs számla ilyen E-mail címmel rendelve!")
+
+
   @RetryTransaction
   @Transactional(isolation = Isolation.SERIALIZABLE)
   fun assignCard(accountId: Int, card: String): Account {

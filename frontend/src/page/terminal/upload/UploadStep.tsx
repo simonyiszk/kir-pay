@@ -62,7 +62,7 @@ export const UploadStep = ({ onReset, card, amount }: { onReset: () => void; car
       <h1 className={cn('font-bold text-2xl pb-2 text-center', status !== 'Ok' && 'text-destructive')}>
         {status !== 'Ok' ? message : 'Sikeres tranzakció!'}
       </h1>
-      <BalanceCheck card={card} loading={balanceCheckLoading} setLoading={setBalanceCheckLoading} />
+      <BalanceCheck showVouchers={true} card={card} loading={balanceCheckLoading} setLoading={setBalanceCheckLoading} />
 
       <Button variant="secondary" className="w-full" onClick={onReset}>
         Új feltöltés

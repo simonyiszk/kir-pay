@@ -72,8 +72,8 @@ export const TransferStep = ({
       <h1 className={cn('font-bold text-2xl pb-2 text-center', status !== 'Ok' && 'text-destructive')}>
         {status !== 'Ok' ? message : 'Sikeres tranzakció!'}
       </h1>
-      <BalanceCheck card={sender} loading={senderBalanceLoading} setLoading={setSenderBalanceLoading} />
-      <BalanceCheck card={recipient} loading={recipientBalanceLoading} setLoading={setRecipientBalanceLoading} />
+      <BalanceCheck showVouchers={false} card={sender} loading={senderBalanceLoading} setLoading={setSenderBalanceLoading} />
+      <BalanceCheck showVouchers={false} card={recipient} loading={recipientBalanceLoading} setLoading={setRecipientBalanceLoading} />
       <Button variant="secondary" className="w-full" onClick={onReset}>
         Új tranzakció
       </Button>

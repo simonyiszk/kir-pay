@@ -6,6 +6,7 @@ import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import CheckAnimation from '@/components/CheckAnimation.tsx'
 import { Item, ResultType } from '@/lib/api/model.ts'
 import { checkout } from '@/lib/api/terminal.api.ts'
+import { BalanceCheck } from '@/page/terminal/common/BalanceCheck.tsx'
 
 export const ClaimTokenStep = ({
   item,
@@ -23,6 +24,7 @@ export const ClaimTokenStep = ({
   const [status, setStatus] = useState<ResultType>()
   const [message, setMessage] = useState<string>()
   const [error, setError] = useState<string>()
+  const [balanceCheckLoading, setBalanceCheckLoading] = useState(false)
 
   useEffect(() => {
     checkout(token, card, { orderLines: [{ itemCount: 1, usedVoucher: true, itemId: item.id }] })
@@ -70,6 +72,7 @@ export const ClaimTokenStep = ({
       <h1 className={cn('font-bold text-2xl pb-2 text-center', status !== 'Ok' && 'text-destructive')}>
         {status !== 'Ok' ? message : 'Sikeres beolvasás!'}
       </h1>
+      <BalanceCheck showVouchers={true} card={card} loading={balanceCheckLoading} setLoading={setBalanceCheckLoading} />
       <Button className="w-full mt-2" onClick={onBackToScan}>
         Még egy ilyet
       </Button>

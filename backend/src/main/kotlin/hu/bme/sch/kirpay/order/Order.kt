@@ -60,6 +60,15 @@ data class Voucher(
 )
 
 
+data class VoucherWithItemName(
+  val voucherId: Int,
+  val accountId: Int?,
+  val itemId: Int,
+  val itemName: String,
+  val count: Int
+)
+
+
 data class ConsumptionLeaderboardEntry(
   val accountId: Int,
   val name: String,

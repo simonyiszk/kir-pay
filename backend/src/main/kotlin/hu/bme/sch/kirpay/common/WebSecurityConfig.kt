@@ -27,7 +27,7 @@ class WebSecurityConfig {
   @Bean
   fun filterChain(http: HttpSecurity): SecurityFilterChain =
     http.authorizeHttpRequests {
-      it.requestMatchers("/actuator/health/liveness", "/actuator/health/readiness").permitAll()
+      it.requestMatchers("/actuator/health/liveness", "/actuator/health/readiness", "/actuator/prometheus").permitAll()
       it.requestMatchers("/error").hasRole(Role.TERMINAL.name)
       it.requestMatchers(APP_ENDPOINT).hasRole(Role.TERMINAL.name)
       it.requestMatchers("$TERMINAL_API/**").hasRole(Role.TERMINAL.name)

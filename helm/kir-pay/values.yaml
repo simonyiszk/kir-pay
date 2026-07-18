@@ -75,6 +75,9 @@ app:
     timeoutSeconds: 5
     failureThreshold: 5
 
+monitoring:
+  enabled: true
+
 postgresql:
   enabled: true
   global:

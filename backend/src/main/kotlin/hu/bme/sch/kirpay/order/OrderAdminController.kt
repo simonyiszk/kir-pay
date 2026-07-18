@@ -138,6 +138,10 @@ class OrderAdminController(
 
 
   @GetMapping("/consumption-leaderboard")
-  fun getConsumptionLeaderboard() = orderService.getConsumptionLeaderboard()
+  fun getConsumptionLeaderboard(@RequestParam(defaultValue = "10") limit: Int) = orderService.getConsumptionLeaderboard(limit)
+
+
+  @GetMapping("/item-leaderboard")
+  fun getConsumptionLeaderboardByItem(@RequestParam(defaultValue = "10") limit: Int) = orderLineService.getConsumptionLeaderboardByItem(limit)
 
 }

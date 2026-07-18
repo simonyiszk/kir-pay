@@ -2,17 +2,19 @@ import { ErrorResultType, ValidatedApiCall } from '@/lib/api/model.ts'
 import { getHashedColor } from '@/lib/utils.ts'
 
 export const AppQueryKeys = {
-  App: 'App',
   Accounts: 'Accounts',
+  Analytics: 'Analytics',
+  App: 'App',
+  ConsumptionLeaderboard: 'ConsumptionLeaderboard',
+  ItemLeaderboard: 'ItemLeaderboard',
+  Events: 'Events',
   Items: 'Items',
-  Principals: 'Principals',
-  Orders: 'Orders',
   OrderLines: 'OrderLines',
   OrderWithOrderLines: 'OrderWithOrderLines',
-  Vouchers: 'Vouchers',
-  Events: 'Events',
+  Orders: 'Orders',
+  Principals: 'Principals',
   Transactions: 'Transactions',
-  Analytics: 'Analytics'
+  Vouchers: 'Vouchers'
 } as const
 export type AppQueryKeys = (typeof AppQueryKeys)[keyof typeof AppQueryKeys]
 
@@ -28,31 +30,24 @@ const defaultColorMapper = <T extends { id?: number }>(data: T) => ({
 export const addColorToResponse = <T extends object>(res: Response, mapper: (data: T) => T = defaultColorMapper): Promise<T> =>
   res.json().then(mapper)
 
-export const addColorToListResponse = <
-  T extends {
-    id?: number
-  }
->(
-  res: Response,
-  selector?: (data: T) => string
-): Promise<T[]> =>
+export const addColorToListResponse = <T extends object>(res: Response, selector?: (data: T) => string): Promise<T[]> =>
   res.json().then((data: T[]) =>
     data.map((entry) => ({
       ...entry,
-      color: getHashedColor(selector ? selector(entry) : entry.id?.toString() || '')
+      color: getHashedColor(selector ? selector(entry) : (entry as { id?: number }).id?.toString() || '')
     }))
   )
 
 const httpStatusToErrorResultType = (status: number): ErrorResultType => {
   switch (status) {
-    case 404:
-      return 'NotFound'
     case 400:
       return 'BadRequest'
     case 401:
       return 'Unauthorized'
     case 403:
       return 'Forbidden'
+    case 404:
+      return 'NotFound'
     default:
       return 'OtherError'
   }

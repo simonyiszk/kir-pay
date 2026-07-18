@@ -30,8 +30,8 @@ const AdminRoot = () => {
 
   if (principal.role !== 'ADMIN') {
     return (
-      <div className="flex items-center justify-center min-h-[100vh]">
-        <Card className="w-[auto]">
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="w-auto">
           <CardHeader>
             <CardTitle>Te nem vagy admin!</CardTitle>
           </CardHeader>

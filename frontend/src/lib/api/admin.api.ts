@@ -3,8 +3,10 @@ import {
   Account,
   AnalyticsDto,
   BatchVoucherDto,
+  ConsumptionLeaderboardEntry,
   Event,
   Item,
+  ItemLeaderboardEntry,
   Order,
   OrderLine,
   OrderWithOrderLine,
@@ -173,6 +175,20 @@ export const findAllEvents = (token: string, page?: number, size?: number) =>
     url: getUrl('events', { page, size }),
     token,
     mapResponse: (res) => addColorToListResponse(res, (event) => event.event)
+  })
+
+export const getConsumptionLeaderboard = (token: string, limit: number) =>
+  httpGet<ConsumptionLeaderboardEntry[]>({
+    url: getUrl('consumption-leaderboard', { limit }),
+    token,
+    mapResponse: (res) => addColorToListResponse(res, (entry) => entry.accountId?.toString() || '')
+  })
+
+export const getItemLeaderboard = (token: string, limit: number) =>
+  httpGet<ItemLeaderboardEntry[]>({
+    url: getUrl('item-leaderboard', { limit }),
+    token,
+    mapResponse: (res) => addColorToListResponse(res, (entry) => entry.itemId?.toString() || '')
   })
 
 export const exportEvents = (token: string) => httpGet<string>({ url: getUrl('export/events'), token, parseJson: false })

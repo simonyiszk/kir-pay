@@ -40,6 +40,7 @@ spec:
               value: {{ .Release.Name | quote }}
           ports:
             - containerPort: 8080
+              name: web
               protocol: TCP
           resources:
             {{ if or (.Values.app.resources.limits.cpu) (.Values.app.resources.limits.memory) }}

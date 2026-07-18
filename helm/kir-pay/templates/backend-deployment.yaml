@@ -16,6 +16,7 @@ spec:
       name: {{ .Release.Name }}
       labels:
         app: {{ .Release.Name }}
+        monitor-spring-boot: "{{ .Values.monitoring.enabled }}"
     spec:
       containers:
         - name: {{ .Release.Name }}
@@ -35,6 +36,8 @@ spec:
               value: {{ .Values.app.currencySymbol }}
             - name: FRONTEND_ADDRESS
               value: {{ .Values.app.frontendUrl }}
+            - name: METRICS_NAME
+              value: {{ .Release.Name | quote }}
           ports:
             - containerPort: 8080
               protocol: TCP

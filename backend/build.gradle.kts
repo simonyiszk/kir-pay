@@ -37,6 +37,7 @@ dependencies {
   implementation("org.springframework.modulith:spring-modulith-starter-core")
   implementation("org.springframework.modulith:spring-modulith-starter-jdbc")
   implementation("org.springframework.boot:spring-boot-starter-actuator")
+  runtimeOnly("io.micrometer:micrometer-registry-prometheus")
   developmentOnly("org.springframework.boot:spring-boot-devtools")
   runtimeOnly("org.postgresql:postgresql")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

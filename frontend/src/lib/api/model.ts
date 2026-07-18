@@ -164,6 +164,19 @@ export type Voucher = {
   count: number
 }
 
+export type VoucherWithItemName = {
+  voucherId: number
+  accountId?: number
+  itemId: number
+  itemName: string
+  count: number
+}
+
+export type AccountWithVouchers = {
+  account: Account
+  vouchers: VoucherWithItemName[]
+}
+
 export type BatchVoucherDto = {
   accounts: number[]
   itemId: number

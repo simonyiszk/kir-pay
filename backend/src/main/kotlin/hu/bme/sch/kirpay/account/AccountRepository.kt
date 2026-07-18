@@ -23,8 +23,8 @@ interface AccountRepository : CrudRepository<Account, Int> {
   fun findActiveAccountById(id: Int): Account?
 
 
-  @Query("select * from accounts where email = :email limit 1")
-  fun findByEmail(email: String): Account?
+  @Query("select * from accounts where email = :email and active")
+  fun findActiveAccountByEmail(email: String): Account?
 
 
   @Query("select coalesce(sum(balance), 0) from accounts where active")

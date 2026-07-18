@@ -1,5 +1,15 @@
-import { Account, AppResponse, BalanceAmountDto, BalanceTransferDto, CardAssignDto, CheckoutDto, Item } from '@/lib/api/model.ts'
+import {
+  Account,
+  AccountWithVouchers,
+  AppResponse,
+  BalanceAmountDto,
+  BalanceTransferDto,
+  CardAssignDto,
+  CheckoutDto,
+  Item
+} from '@/lib/api/model.ts'
 import { addColorToListResponse, addColorToResponse, getApiRoot, httpGet, httpPost } from '@/lib/api/common.api.ts'
+import { getHashedColor } from '@/lib/utils.ts'
 
 const getUrl = (endpoint: string, params?: object) => {
   const url = new URL(`${getApiRoot()}/terminal/${endpoint}`)
@@ -25,11 +35,17 @@ export const findAccountById = (token: string, accountId: number) =>
     mapResponse: addColorToResponse
   })
 
+const accountResponseMapper = (res: Response) =>
+  addColorToResponse<AccountWithVouchers>(res, (data) => ({
+    vouchers: data.vouchers,
+    account: { ...data.account, color: getHashedColor(data.account.id?.toString() ?? '') }
+  }))
+
 export const findAccountByCard = (token: string, card: string) =>
-  httpGet<Account>({
+  httpGet<AccountWithVouchers>({
     url: getUrl(`account-by-card/${encodeURIComponent(card)}`),
     token,
-    mapResponse: addColorToResponse
+    mapResponse: accountResponseMapper
   })
 
 export const uploadBalance = (token: string, card: string, data: BalanceAmountDto) =>

@@ -20,8 +20,13 @@ export const createToken = (username: string, password: string) => `Basic ${btoa
 
 export const getApiRoot = () => `${window.config.BACKEND_URL}/v1/api`
 
-export const addColorToResponse = <T extends { id?: number }>(res: Response): Promise<T> =>
-  res.json().then((data: T) => ({ ...data, color: getHashedColor(data.id?.toString() ?? '') }))
+const defaultColorMapper = <T extends { id?: number }>(data: T) => ({
+  ...data,
+  color: getHashedColor(data.id?.toString() ?? '')
+})
+
+export const addColorToResponse = <T extends object>(res: Response, mapper: (data: T) => T = defaultColorMapper): Promise<T> =>
+  res.json().then(mapper)
 
 export const addColorToListResponse = <
   T extends {

@@ -1,6 +1,7 @@
 package hu.bme.sch.kirpay.account
 
 import hu.bme.sch.kirpay.common.TERMINAL_API
+import hu.bme.sch.kirpay.order.VoucherService
 import hu.bme.sch.kirpay.principal.PermissionName
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
@@ -13,7 +14,8 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping(TERMINAL_API)
 class AccountTerminalController(
   private val accountService: AccountService,
-  private val balanceService: AccountBalanceService
+  private val balanceService: AccountBalanceService,
+  private val voucherService: VoucherService
 ) {
 
   @GetMapping("/accounts")
@@ -63,6 +65,12 @@ class AccountTerminalController(
 
 
   @GetMapping("/account-by-card/{card}")
-  fun getCardAccount(@PathVariable card: String) = accountService.findActiveByCard(card)
+  fun getCardAccount(@PathVariable card: String) =
+    voucherService.getVouchersWithAccount(accountService.findActiveByCard(card))
+
+
+  @GetMapping("/account-by-email/{email}")
+  fun getEmailAccount(@PathVariable email: String) =
+    voucherService.getVouchersWithAccount(accountService.findByEmail(email))
 
 }

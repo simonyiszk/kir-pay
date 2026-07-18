@@ -14,13 +14,8 @@ import org.springframework.web.bind.annotation.*
 class AccountAdminController(
   parserFactory: CsvParserFactory,
   private val accountService: AccountService,
-  private val accountRepository: AccountRepository
 ) {
   private val accountParser = parserFactory.getParserForType(Account::class)
-
-
-  @GetMapping("/accounts-by-email/{email}")
-  fun getAccountByEmail(@PathVariable email: String) = accountRepository.findByEmail(email)
 
 
   @PostMapping("/accounts/{accountId}/disable")

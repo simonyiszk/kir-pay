@@ -78,6 +78,16 @@ app:
 monitoring:
   enabled: true
 
+postgresBackup:
+  enabled: true
+  schedule: "0 3 * * *"
+  restartPolicy: Never
+  imagePullPolicy: Always
+  image: harbor.sch.bme.hu/org-kir-dev/postgres-backup:latest
+  googleServiceAccount: 'service account json contents'
+  driveParentId: 'the ID of the drive folder for the files'
+  driveId: 'the ID of the shared drive'
+
 postgresql:
   enabled: true
   global:

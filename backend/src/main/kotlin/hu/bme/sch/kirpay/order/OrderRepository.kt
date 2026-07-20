@@ -8,11 +8,14 @@ import org.springframework.stereotype.Repository
 @Repository
 interface OrderRepository : CrudRepository<Order, Int> {
 
+  @Query("select * from orders where idempotency_key = :key")
+  fun findByIdempotencyKey(key: String): Order?
+
   @Query("select * from orders order by timestamp desc")
   fun findAllOrderByTimestampDesc(): List<Order>
 
 
-  @Query("select * from orders order by timestamp desc offset :skip rows fetch next :take rows only")
+  @Query("select * from orders order by timestamp desc, id desc offset :skip rows fetch next :take rows only")
   fun findAllOrderByTimestampDescPaginated(skip: Long, take: Int): List<Order>
 
 
@@ -45,7 +48,7 @@ interface OrderRepository : CrudRepository<Order, Int> {
                ol.paid_amount
         from orders o
                  inner join order_lines ol on o.id = ol.order_id
-        order by o.timestamp desc, ol.id asc
+        order by o.timestamp desc, o.id desc, ol.id asc
         offset :skip rows fetch next :take rows only"""
   )
   fun findAllOrderWithOrderLinesOrderByTimestampDescPaginated(skip: Long, take: Int): List<OrderWithOrderLine>
@@ -98,7 +101,7 @@ interface VoucherRepository : CrudRepository<Voucher, Int> {
   @Query("""
     select vouchers.id as voucher_id, account_id, item_id, i.name as item_name, vouchers.count
     from vouchers
-         inner join public.items i on i.id = vouchers.item_id
+         inner join items i on i.id = vouchers.item_id
     where account_id = :accountId
   """)
   fun findAllByAccountIdWithItemName(accountId: Int): List<VoucherWithItemName>

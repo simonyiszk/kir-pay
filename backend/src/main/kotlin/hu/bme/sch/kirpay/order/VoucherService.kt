@@ -4,6 +4,7 @@ import hu.bme.sch.kirpay.account.Account
 import hu.bme.sch.kirpay.common.BadRequestException
 import hu.bme.sch.kirpay.principal.PermissionName
 import hu.bme.sch.kirpay.principal.getLoggedInPrincipal
+import hu.bme.sch.kirpay.principal.toRef
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.access.annotation.Secured
 import org.springframework.stereotype.Service
@@ -30,11 +31,25 @@ class VoucherService(
   fun delete(voucherId: Int) {
     val voucher = voucherRepository.findById(voucherId).orElseThrow { BadRequestException("Az utalvány nem létezik!") }
     voucherRepository.deleteById(voucherId)
-    events.publishEvent(VoucherDeletedEvent(voucher, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(VoucherDeletedEvent(voucher, getLoggedInPrincipal()?.toRef(), clock.millis()))
   }
 
 
-  fun importVouchers(vouchers: List<OrderAdminController.VoucherDto>) = vouchers.forEach { saveVoucher(it) }
+  fun importVouchers(vouchers: List<OrderAdminController.VoucherDto>): List<String> {
+    val errors = mutableListOf<String>()
+    vouchers.forEachIndexed { index, voucher ->
+      try {
+        if (voucher.accountId == null) {
+          errors.add("Sor ${index + 1}: hiányzó account_id")
+        } else {
+          saveVoucher(voucher)
+        }
+      } catch (e: BadRequestException) {
+        errors.add("Sor ${index + 1}: ${e.message}")
+      }
+    }
+    return errors
+  }
 
 
   fun saveVoucher(voucher: OrderAdminController.VoucherDto) {
@@ -50,7 +65,7 @@ class VoucherService(
           count = voucher.count
         )
       )
-      events.publishEvent(VoucherCreatedEvent(saved, getLoggedInPrincipal(), clock.millis()))
+      events.publishEvent(VoucherCreatedEvent(saved, getLoggedInPrincipal()?.toRef(), clock.millis()))
     }
   }
 
@@ -66,7 +81,7 @@ class VoucherService(
     if (count < 0) throw BadRequestException("A mennyiség nem lehet negatív!")
     val voucher = voucherRepository.findById(voucherId).orElseThrow { BadRequestException("Az utalvány nem létezik!") }
     val saved = voucherRepository.save(voucher.copy(count = count))
-    events.publishEvent(VoucherUpdatedEvent(saved, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(VoucherUpdatedEvent(saved, getLoggedInPrincipal()?.toRef(), clock.millis()))
     return saved
   }
 
@@ -83,7 +98,7 @@ class VoucherService(
     itemService.removeFromStock(item.id!!, dto.itemCount)
 
     val newVoucher = voucherRepository.save(voucher.copy(count = voucher.count - dto.itemCount))
-    events.publishEvent(VoucherUpdatedEvent(newVoucher, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(VoucherUpdatedEvent(newVoucher, getLoggedInPrincipal()?.toRef(), clock.millis()))
 
     orderLineService.save(
       OrderLine(
@@ -104,7 +119,7 @@ class VoucherService(
         item.name,
         dto.message,
         dto.itemCount,
-        getLoggedInPrincipal(),
+        getLoggedInPrincipal()?.toRef(),
         clock.millis(),
       )
     )

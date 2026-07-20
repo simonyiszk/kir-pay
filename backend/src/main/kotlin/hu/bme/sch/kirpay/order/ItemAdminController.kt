@@ -19,8 +19,12 @@ class ItemAdminController(
   fun getItemsPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
     if (page == null && size == null)
       itemService.findAll()
-    else
-      itemService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
+    else {
+      val p = page ?: DEFAULT_PAGE
+      val s = size ?: DEFAULT_PAGE_SIZE
+      requireValidPagination(p, s)
+      itemService.findPaginated(p, s)
+    }
 
 
   @GetMapping("/items/{itemId}")

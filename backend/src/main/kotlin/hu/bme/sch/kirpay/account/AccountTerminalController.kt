@@ -26,7 +26,7 @@ class AccountTerminalController(
   fun getAccount(@PathVariable accountId: Int) = accountService.find(accountId)
 
 
-  data class BalanceAmountDto(@field:Min(0) val amount: Long)
+  data class BalanceAmountDto(@field:Min(1) val amount: Long)
 
   @PostMapping("/account-by-card/{card}/pay")
   @Secured(PermissionName.SELL_ITEMS)
@@ -44,7 +44,7 @@ class AccountTerminalController(
   ) = balanceService.upload(card, dto.amount)
 
 
-  data class BalanceTransferDto(@field:NotBlank val recipientCard: String, @field:Min(0) val amount: Long)
+  data class BalanceTransferDto(@field:NotBlank val recipientCard: String, @field:Min(1) val amount: Long)
 
   @PostMapping("/account-by-card/{card}/transfer")
   @Secured(PermissionName.TRANSFER_FUNDS)

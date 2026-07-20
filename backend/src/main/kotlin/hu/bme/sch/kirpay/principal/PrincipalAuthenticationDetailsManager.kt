@@ -23,7 +23,6 @@ class PrincipalAuthenticationDetailsManager(
     val principal = principalRepository.findByName(username)
       ?: throw UsernameNotFoundException("Felhasználó '$username' nem található!")
 
-    events.publishEvent(PrincipalAuthenticatedEvent(principal, clock.millis()))
     return principal
   }
 
@@ -46,7 +45,7 @@ class PrincipalAuthenticationDetailsManager(
     ).copyWithAuthorities(user.authorities)
 
     principalRepository.save(principal)
-    events.publishEvent(PrincipalCreatedEvent(principal, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(PrincipalCreatedEvent(principal, getLoggedInPrincipal()?.toRef(), clock.millis()))
   }
 
 
@@ -61,7 +60,7 @@ class PrincipalAuthenticationDetailsManager(
     ).copyWithAuthorities(user.authorities)
 
     principalRepository.save(newPrincipal)
-    events.publishEvent(PrincipalUpdatedEvent(principal, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(PrincipalUpdatedEvent(principal, getLoggedInPrincipal()?.toRef(), clock.millis()))
   }
 
 
@@ -70,7 +69,7 @@ class PrincipalAuthenticationDetailsManager(
       ?: throw IllegalArgumentException("A felhasználót nem lehet törölni, mert nem létezik!")
 
     principalRepository.delete(principal)
-    events.publishEvent(PrincipalDeletedEvent(principal, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(PrincipalDeletedEvent(principal, getLoggedInPrincipal()?.toRef(), clock.millis()))
   }
 
 

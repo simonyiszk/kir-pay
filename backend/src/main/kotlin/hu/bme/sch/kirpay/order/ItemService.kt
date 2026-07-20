@@ -4,6 +4,7 @@ import hu.bme.sch.kirpay.account.AccountBalanceService
 import hu.bme.sch.kirpay.common.BadRequestException
 import hu.bme.sch.kirpay.principal.PermissionName
 import hu.bme.sch.kirpay.principal.getLoggedInPrincipal
+import hu.bme.sch.kirpay.principal.toRef
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.access.annotation.Secured
 import org.springframework.stereotype.Service
@@ -33,16 +34,18 @@ class ItemService(
 
 
   fun createItem(dto: Item): Item {
-    val item = itemRepository.save(dto)
-    events.publishEvent(ItemCreatedEvent(item, getLoggedInPrincipal(), clock.millis()))
+    val item = itemRepository.save(dto.copy(id = null))
+    events.publishEvent(ItemCreatedEvent(item, getLoggedInPrincipal()?.toRef(), clock.millis()))
     return item
   }
 
 
   fun updateItem(id: Int, dto: Item): Item {
     if (!itemRepository.existsById(id)) throw BadRequestException("A termék nem létezik!")
-    val item = itemRepository.save(dto.copy(id = id))
-    events.publishEvent(ItemUpdatedEvent(item, getLoggedInPrincipal(), clock.millis()))
+    val existing = find(id)
+    // Preserve stock and version from existing
+    val item = itemRepository.save(dto.copy(id = id, stock = existing.stock, version = existing.version))
+    events.publishEvent(ItemUpdatedEvent(item, getLoggedInPrincipal()?.toRef(), clock.millis()))
     return item
   }
 
@@ -50,18 +53,18 @@ class ItemService(
   fun deleteItem(itemId: Int) {
     val item = find(itemId)
     itemRepository.deleteById(itemId)
-    events.publishEvent(ItemDeletedEvent(item, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(ItemDeletedEvent(item, getLoggedInPrincipal()?.toRef(), clock.millis()))
   }
 
   fun setEnabled(itemId: Int, enabled: Boolean): Item {
     val item = itemRepository.save(find(itemId).copy(enabled = enabled))
-    events.publishEvent(ItemUpdatedEvent(item, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(ItemUpdatedEvent(item, getLoggedInPrincipal()?.toRef(), clock.millis()))
     return item
   }
 
 
   fun importItems(items: List<Item>): Unit = itemRepository.saveAll(items.map { it.copy(id = null) })
-    .forEach { events.publishEvent(ItemCreatedEvent(it, getLoggedInPrincipal(), clock.millis())) }
+    .forEach { events.publishEvent(ItemCreatedEvent(it, getLoggedInPrincipal()?.toRef(), clock.millis())) }
 
 
   @Secured(PermissionName.SELL_ITEMS)
@@ -93,8 +96,14 @@ class ItemService(
   fun sellItem(order: Order, item: Item, message: String?, count: Int) {
     removeFromStock(item.id!!, count)
 
-    val amount = item.cost * count
-    accountBalanceService.pay(order.accountId, amount, logEvent = false)
+    val amount = try {
+      Math.multiplyExact(item.cost, count.toLong())
+    } catch (e: ArithmeticException) {
+      throw BadRequestException("Az összeg túl nagy!")
+    }
+    if (amount > 0) {
+      accountBalanceService.pay(order.accountId, amount, logEvent = false)
+    }
 
     orderLineService.save(
       OrderLine(
@@ -115,15 +124,21 @@ class ItemService(
         message,
         amount,
         count,
-        getLoggedInPrincipal(),
+        getLoggedInPrincipal()?.toRef(),
         clock.millis()
       )
     )
   }
 
   fun sellCustomItem(order: Order, message: String?, count: Int, cost: Long) {
-    val amount = cost * count
-    accountBalanceService.pay(order.accountId, amount, logEvent = false)
+    val amount = try {
+      Math.multiplyExact(cost, count.toLong())
+    } catch (e: ArithmeticException) {
+      throw BadRequestException("Az összeg túl nagy!")
+    }
+    if (amount > 0) {
+      accountBalanceService.pay(order.accountId, amount, logEvent = false)
+    }
     orderLineService.save(
       OrderLine(
         id = null,
@@ -143,7 +158,7 @@ class ItemService(
         null,
         amount,
         count,
-        getLoggedInPrincipal(),
+        getLoggedInPrincipal()?.toRef(),
         clock.millis()
       )
     )

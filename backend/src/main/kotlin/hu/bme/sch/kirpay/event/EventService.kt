@@ -1,6 +1,6 @@
 package hu.bme.sch.kirpay.event
 
-import hu.bme.sch.kirpay.principal.Principal
+import hu.bme.sch.kirpay.principal.PrincipalRef
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -31,8 +31,8 @@ class EventService(private val eventRepository: EventRepository) {
   }
 
 
-  fun formatPerformerPrincipal(by: Principal?): String =
-    by?.let { "${it.name} (${it.role.name.lowercase()})" } ?: "Ismeretlen végrehajtó"
+  fun formatPerformerPrincipal(by: PrincipalRef?): String =
+    by?.let { "${it.name}" } ?: "Ismeretlen végrehajtó"
 
 
 }

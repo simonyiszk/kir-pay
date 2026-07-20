@@ -3,6 +3,7 @@ package hu.bme.sch.kirpay.account
 import hu.bme.sch.kirpay.common.BadRequestException
 import hu.bme.sch.kirpay.common.RetryTransaction
 import hu.bme.sch.kirpay.principal.getLoggedInPrincipal
+import hu.bme.sch.kirpay.principal.toRef
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
@@ -20,28 +21,33 @@ class AccountBalanceService(
   @RetryTransaction
   @Transactional(isolation = Isolation.SERIALIZABLE)
   fun pay(card: String, amount: Long, logEvent: Boolean): Account {
-    if (amount < 0) throw BadRequestException("Helytelen argumentum!")
+    if (amount <= 0) throw BadRequestException("Helytelen argumentum!")
     val account = accountRepository.findActiveAccountByCard(card)
       ?: throw BadRequestException("A számla nem létezik!")
     return pay(account, amount, logEvent)
   }
 
 
+  @RetryTransaction
+  @Transactional(isolation = Isolation.SERIALIZABLE)
   fun pay(accountId: Int, amount: Long, logEvent: Boolean): Account {
-    if (amount < 0) throw BadRequestException("Helytelen argumentum!")
+    if (amount <= 0) throw BadRequestException("Helytelen argumentum!")
     val account = accountRepository.findActiveAccountById(accountId)
       ?: throw BadRequestException("A számla nem létezik!")
     return pay(account, amount, logEvent)
   }
 
 
+  @RetryTransaction
+  @Transactional(isolation = Isolation.SERIALIZABLE)
   fun pay(account: Account, amount: Long, logEvent: Boolean): Account {
+    if (amount <= 0) throw BadRequestException("Helytelen argumentum!")
     val newAccount = account.copy(balance = account.balance - amount)
     if (newAccount.balance < 0) throw BadRequestException("Nincs elég egyenleg!")
 
     accountRepository.save(newAccount)
     if (logEvent) {
-      events.publishEvent(AccountPayEvent(newAccount, amount, getLoggedInPrincipal(), clock.millis()))
+      events.publishEvent(AccountPayEvent(newAccount, amount, getLoggedInPrincipal()?.toRef(), clock.millis()))
     }
     return newAccount
   }
@@ -50,13 +56,19 @@ class AccountBalanceService(
   @RetryTransaction
   @Transactional(isolation = Isolation.SERIALIZABLE)
   fun upload(card: String, amount: Long): Account {
-    if (amount < 0) throw BadRequestException("Helytelen argumentum!")
+    if (amount <= 0) throw BadRequestException("Helytelen argumentum!")
     val account = accountRepository.findActiveAccountByCard(card)
       ?: throw BadRequestException("A számla nem létezik!")
-    val newAccount = account.copy(balance = account.balance + amount)
+    val newAccount = account.copy(
+      balance = try {
+        Math.addExact(account.balance, amount)
+      } catch (e: ArithmeticException) {
+        throw BadRequestException("Az összeg túl nagy!")
+      }
+    )
 
     accountRepository.save(newAccount)
-    events.publishEvent(AccountUploadEvent(newAccount, amount, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(AccountUploadEvent(newAccount, amount, getLoggedInPrincipal()?.toRef(), clock.millis()))
     return newAccount
   }
 
@@ -65,17 +77,29 @@ class AccountBalanceService(
   @RetryTransaction
   @Transactional(isolation = Isolation.SERIALIZABLE)
   fun transfer(senderCard: String, recipientCard: String, amount: Long): Account {
-    if (amount < 0) throw BadRequestException("Helytelen argumentum!")
+    if (amount <= 0) throw BadRequestException("Helytelen argumentum!")
 
     val sender = accountRepository.findActiveAccountByCard(senderCard)
       ?: throw BadRequestException("A forrásszámla nem létezik!")
-    val newSender = sender.copy(balance = sender.balance - amount)
+    val newSender = sender.copy(
+      balance = try {
+        Math.subtractExact(sender.balance, amount)
+      } catch (e: ArithmeticException) {
+        throw BadRequestException("Az összeg túl nagy!")
+      }
+    )
     if (newSender.balance < 0) throw BadRequestException("Nincs elég egyenleg!")
 
     val recipient = accountRepository.findActiveAccountByCard(recipientCard)
       ?: throw BadRequestException("A célszámla nem létezik!")
     if (sender.id == recipient.id) throw BadRequestException("A küldő és fogadó nem lehet ugyanaz a személy!")
-    val newRecipient = recipient.copy(balance = recipient.balance + amount)
+    val newRecipient = recipient.copy(
+      balance = try {
+        Math.addExact(recipient.balance, amount)
+      } catch (e: ArithmeticException) {
+        throw BadRequestException("Az összeg túl nagy!")
+      }
+    )
 
     accountRepository.save(newSender)
     accountRepository.save(newRecipient)
@@ -84,7 +108,7 @@ class AccountBalanceService(
         newSender,
         newRecipient,
         amount,
-        getLoggedInPrincipal(),
+        getLoggedInPrincipal()?.toRef(),
         clock.millis()
       )
     )

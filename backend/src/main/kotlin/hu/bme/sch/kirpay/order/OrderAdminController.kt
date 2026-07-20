@@ -27,8 +27,12 @@ class OrderAdminController(
   fun getOrdersPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
     if (page == null && size == null)
       orderService.findAll()
-    else
-      orderService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
+    else {
+      val p = page ?: DEFAULT_PAGE
+      val s = size ?: DEFAULT_PAGE_SIZE
+      requireValidPagination(p, s)
+      orderService.findPaginated(p, s)
+    }
 
 
   @GetMapping("/export/orders", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -46,8 +50,12 @@ class OrderAdminController(
     @RequestParam(required = false) size: Int?
   ) = if (page == null && size == null)
     orderService.findAllOrdersWithOrderLines()
-  else
-    orderService.findAllOrdersWithOrderLinesPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
+  else {
+    val p = page ?: DEFAULT_PAGE
+    val s = size ?: DEFAULT_PAGE_SIZE
+    requireValidPagination(p, s)
+    orderService.findAllOrdersWithOrderLinesPaginated(p, s)
+  }
 
 
   @GetMapping("/export/orders-with-order-lines", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -63,8 +71,12 @@ class OrderAdminController(
   fun getOrderLinesPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
     if (page == null && size == null)
       orderLineService.findAll()
-    else
-      orderLineService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
+    else {
+      val p = page ?: DEFAULT_PAGE
+      val s = size ?: DEFAULT_PAGE_SIZE
+      requireValidPagination(p, s)
+      orderLineService.findPaginated(p, s)
+    }
 
 
   @GetMapping("/export/order_lines", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
@@ -80,8 +92,12 @@ class OrderAdminController(
   fun getVouchersPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
     if (page == null && size == null)
       voucherService.findAll()
-    else
-      voucherService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
+    else {
+      val p = page ?: DEFAULT_PAGE
+      val s = size ?: DEFAULT_PAGE_SIZE
+      requireValidPagination(p, s)
+      voucherService.findPaginated(p, s)
+    }
 
 
   @DeleteMapping("/vouchers/{voucherId}")
@@ -122,9 +138,14 @@ class OrderAdminController(
 
   @PostMapping("/import/vouchers", consumes = [MediaType.TEXT_PLAIN_VALUE])
   @ResponseStatus(HttpStatus.CREATED)
-  fun importVouchers(@RequestBody csv: String) {
+  fun importVouchers(@RequestBody csv: String): Map<String, Any> {
     val vouchers = voucherParser.fromCsv(csv)
-    voucherService.importVouchers(vouchers)
+    val errors = voucherService.importVouchers(vouchers)
+    return mapOf(
+      "imported" to (vouchers.size - errors.size),
+      "total" to vouchers.size,
+      "errors" to errors
+    )
   }
 
 

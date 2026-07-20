@@ -11,6 +11,11 @@ services:
       - kir-pay-network
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   kir-pay-backend:
     image: ghcr.io/simonyiszk/kir-pay:latest
     env_file:
@@ -24,7 +29,8 @@ services:
     networks:
       - kir-pay-network
     depends_on:
-      - kir-pay-db
+      kir-pay-db:
+        condition: service_healthy
   kir-pay-frontend:
     build:
       context: ./frontend

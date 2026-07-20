@@ -3,6 +3,7 @@ package hu.bme.sch.kirpay.order
 import hu.bme.sch.kirpay.account.AccountService
 import hu.bme.sch.kirpay.common.RetryTransaction
 import hu.bme.sch.kirpay.principal.getLoggedInPrincipal
+import hu.bme.sch.kirpay.principal.toRef
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
@@ -39,9 +40,17 @@ class OrderService(
 
   @RetryTransaction
   @Transactional(isolation = Isolation.SERIALIZABLE)
-  fun checkout(card: String, dto: OrderTerminalController.CheckoutDto) {
-    val order = newOrder(card)
-    events.publishEvent(OrderCreatedEvent(order.id, order.accountId, getLoggedInPrincipal(), clock.millis()))
+  fun checkout(card: String, dto: OrderTerminalController.CheckoutDto): Order {
+    // Idempotency check: if idempotencyKey is provided and an order exists with it, return existing
+    dto.idempotencyKey?.let { key ->
+      val keyStr = key.toString()
+      orderRepository.findByIdempotencyKey(keyStr)?.let { existing ->
+        return existing
+      }
+    }
+
+    val order = newOrder(card, dto.idempotencyKey?.toString())
+    events.publishEvent(OrderCreatedEvent(order.id, order.accountId, getLoggedInPrincipal()?.toRef(), clock.millis()))
 
     for (line in dto.orderLines) {
       if (line.usedVoucher) {
@@ -50,12 +59,14 @@ class OrderService(
         itemService.processSaleAuthorized(order, line)
       }
     }
+
+    return order
   }
 
 
-  private fun newOrder(card: String): Order {
+  private fun newOrder(card: String, idempotencyKey: String? = null): Order {
     val account = accountService.findActiveByCard(card)
-    return orderRepository.save(Order(id = null, accountId = account.id!!, timestamp = clock.millis()))
+    return orderRepository.save(Order(id = null, accountId = account.id!!, timestamp = clock.millis(), idempotencyKey = idempotencyKey))
   }
 
 }

@@ -3,6 +3,7 @@ plugins {
   kotlin("plugin.spring") version "2.4.0"
   id("org.springframework.boot") version "4.1.0"
   id("io.spring.dependency-management") version "1.1.7"
+  id("jacoco")
 }
 
 group = "hu.bme.sch"
@@ -41,6 +42,18 @@ dependencies {
   developmentOnly("org.springframework.boot:spring-boot-devtools")
   runtimeOnly("org.postgresql:postgresql")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+  // Testing
+  testImplementation("org.springframework.boot:spring-boot-starter-test")
+  testImplementation("org.springframework.security:spring-security-test")
+  testImplementation("io.mockk:mockk:1.14.11")
+  testImplementation("org.testcontainers:testcontainers:1.21.4")
+  testImplementation("org.testcontainers:postgresql:1.21.4")
+  testImplementation("org.testcontainers:junit-jupiter:1.21.4")
+  testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
+  testImplementation("org.jetbrains.kotlin:kotlin-test")
+  testImplementation("com.ninja-squad:springmockk:5.0.1")
+  testImplementation("org.springframework.boot:spring-boot-starter-webflux")
 }
 
 dependencyManagement {
@@ -52,6 +65,19 @@ dependencyManagement {
 kotlin {
   compilerOptions {
     freeCompilerArgs.addAll("-Xjsr305=strict")
+  }
+}
+
+tasks.test {
+  useJUnitPlatform()
+  finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test)
+  reports {
+    xml.required = true
+    html.required = true
   }
 }
 

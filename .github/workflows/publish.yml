@@ -47,7 +47,10 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Push image
-        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
 
   build-and-push-frontend:
     runs-on: ubuntu-latest
@@ -71,7 +74,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Frontend Docker Image
-        run: docker build -t ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest frontend/
+        run: docker build -t ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest -t ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ github.sha }} frontend/
 
       - name: Push Frontend Docker Image
-        run: docker push ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ github.sha }}

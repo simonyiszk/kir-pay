@@ -29,19 +29,30 @@ spec:
             - name: SERVER_PORT
               value: "8080"
             - name: DATABASE_HOST
+            {{- if .Values.postgresql.enabled }}
               value: {{ .Release.Name }}-postgresql:5432
+            {{- else }}
+              value: {{ .Values.externalDatabase.host }}:{{ .Values.externalDatabase.port | default 5432 }}
+            {{- end }}
             - name: POSTGRES_DB
               value: {{ .Values.postgresql.global.postgresql.auth.database }}
             - name: CURRENCY_SYMBOL
               value: {{ .Values.app.currencySymbol }}
             - name: FRONTEND_ADDRESS
-              value: {{ .Values.app.frontendUrl }}
+              value: https://{{ .Values.frontend.host }}
             - name: METRICS_NAME
               value: {{ .Release.Name | quote }}
           ports:
             - containerPort: 8080
               name: web
               protocol: TCP
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
           resources:
             {{ if or (.Values.app.resources.limits.cpu) (.Values.app.resources.limits.memory) }}
             limits:
@@ -77,4 +88,5 @@ spec:
             periodSeconds: {{ .Values.app.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.app.livenessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.app.livenessProbe.failureThreshold }}
+      automountServiceAccountToken: false
       restartPolicy: Always

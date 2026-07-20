@@ -25,14 +25,24 @@ class PrincipalService(
 
 
   fun createPrincipal(principal: PrincipalDto, failOnCollision: Boolean = true): Principal? {
-    if (principalRepository.findByName(principal.name) != null) {
-      if (!failOnCollision) return null
+    val existing = principalRepository.findByName(principal.name)
+    if (existing != null) {
+      if (!failOnCollision) {
+        val updated = principal.toPrincipal(passwordEncoder, clock).copy(
+          id = existing.id,
+          createdAt = existing.createdAt,
+          lastUsed = existing.lastUsed
+        )
+        val saved = principalRepository.save(updated)
+        events.publishEvent(PrincipalUpdatedEvent(saved, null, clock.millis()))
+        return saved
+      }
       throw BadRequestException("Már létezik principal ezzel a felhasználónévvel!")
     }
     val importedPrincipal = principal.toPrincipal(passwordEncoder, clock)
 
 
-    events.publishEvent(PrincipalCreatedEvent(importedPrincipal, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(PrincipalCreatedEvent(importedPrincipal, getLoggedInPrincipal()?.toRef(), clock.millis()))
     return principalRepository.save(importedPrincipal)
   }
 
@@ -48,11 +58,15 @@ class PrincipalService(
       if (!dto.active) throw BadRequestException("Adminokat nem lehet letiltani!")
     }
 
+    if (dto.name != principal.name && principalRepository.findByName(dto.name) != null) {
+      throw BadRequestException("Már létezik principal ezzel a felhasználónévvel!")
+    }
+
     val updated = dto.toPrincipal(passwordEncoder, clock).copy(id = id)
     val secret = if (dto.password == "***") principal.secret else updated.secret
-    val newPrincipal = principalRepository.save(updated.copy(secret = secret))
+    val newPrincipal = principalRepository.save(updated.copy(secret = secret, createdAt = principal.createdAt, lastUsed = principal.lastUsed))
 
-    events.publishEvent(PrincipalUpdatedEvent(updated, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(PrincipalUpdatedEvent(updated, getLoggedInPrincipal()?.toRef(), clock.millis()))
     return newPrincipal
   }
 
@@ -61,7 +75,7 @@ class PrincipalService(
     val principal = find(principalId)
     if (principal.role == Role.ADMIN) throw BadRequestException("Adminokat nem lehet törölni!")
     principalRepository.delete(principal)
-    events.publishEvent(PrincipalDeletedEvent(principal, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(PrincipalDeletedEvent(principal, getLoggedInPrincipal()?.toRef(), clock.millis()))
   }
 
 
@@ -69,14 +83,14 @@ class PrincipalService(
     val principal = find(id)
     if (principal.role == Role.ADMIN && !enabled) throw BadRequestException("Admint nem lehet letiltani")
     val newPrincipal = principalRepository.save(principal.copy(active = enabled))
-    events.publishEvent(PrincipalUpdatedEvent(newPrincipal, getLoggedInPrincipal(), clock.millis()))
+    events.publishEvent(PrincipalUpdatedEvent(newPrincipal, getLoggedInPrincipal()?.toRef(), clock.millis()))
     return newPrincipal
   }
 
 
   fun updateLastUsed(id: Int?) {
     if (id == null) return
-    principalRepository.findById(id).ifPresent { principalRepository.save(it.copy(lastUsed = clock.millis())) }
+    principalRepository.updateLastUsed(id, clock.millis())
   }
 
 }

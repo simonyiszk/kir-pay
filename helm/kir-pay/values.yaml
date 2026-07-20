@@ -130,3 +130,11 @@ postgresql:
     persistence:
       size: 2Gi
     resourcesPreset: "small"
+
+# External database configuration (used when postgresql.enabled is false)
+externalDatabase:
+  host: ""
+  port: 5432
+  database: kir-pay
+  username: kirpay
+  password: password

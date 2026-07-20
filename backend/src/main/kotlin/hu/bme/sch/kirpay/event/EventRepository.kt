@@ -12,7 +12,7 @@ interface EventRepository : CrudRepository<Event, Int> {
   fun findAllOrderByTimestampDesc(): List<Event>
 
 
-  @Query("select * from events order by timestamp desc offset :skip rows fetch next :take rows only")
+  @Query("select * from events order by timestamp desc, id desc offset :skip rows fetch next :take rows only")
   fun findAllOrderByTimestampDescPaginated(skip: Long, take: Int): List<Event>
 
 }

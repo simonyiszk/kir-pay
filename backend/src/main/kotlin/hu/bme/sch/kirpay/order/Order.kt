@@ -1,6 +1,7 @@
 package hu.bme.sch.kirpay.order
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.annotation.Version
 import org.springframework.data.relational.core.mapping.Table
 import org.springframework.modulith.ApplicationModule
 
@@ -10,7 +11,8 @@ import org.springframework.modulith.ApplicationModule
 data class Order(
   @Id var id: Int?,
   val accountId: Int,
-  val timestamp: Long
+  val timestamp: Long,
+  val idempotencyKey: String? = null
 )
 
 
@@ -47,7 +49,8 @@ data class Item(
   val cost: Long,
   val stock: Int,
   val enabled: Boolean,
-  val showOnLeaderboard: Boolean = false
+  val showOnLeaderboard: Boolean = false,
+  @Version val version: Int = 0
 )
 
 

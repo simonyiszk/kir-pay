@@ -3,6 +3,7 @@ package hu.bme.sch.kirpay.account
 import hu.bme.sch.kirpay.common.ADMIN_API
 import hu.bme.sch.kirpay.common.CsvParserFactory
 import hu.bme.sch.kirpay.common.asFileAttachment
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -27,11 +28,11 @@ class AccountAdminController(
 
 
   @PostMapping("/accounts")
-  fun createAccount(@RequestBody dto: AccountCreateDto) = accountService.create(dto)
+  fun createAccount(@Valid @RequestBody dto: AccountCreateDto) = accountService.create(dto)
 
 
   @PostMapping("/accounts/{accountId}")
-  fun updateAccount(@PathVariable accountId: Int, @RequestBody dto: AccountUpdateDto) =
+  fun updateAccount(@PathVariable accountId: Int, @Valid @RequestBody dto: AccountUpdateDto) =
     accountService.update(accountId, dto)
 
 

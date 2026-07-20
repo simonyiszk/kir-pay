@@ -1,11 +1,11 @@
 package hu.bme.sch.kirpay.common
 
-import hu.bme.sch.kirpay.principal.Principal
+import hu.bme.sch.kirpay.principal.PrincipalRef
 
 
 interface AuthenticatedAppEvent : AppEvent {
 
-  val by: Principal?
+  val by: PrincipalRef?
 
 }
 

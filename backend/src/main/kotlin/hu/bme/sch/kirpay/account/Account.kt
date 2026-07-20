@@ -1,6 +1,7 @@
 package hu.bme.sch.kirpay.account
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.annotation.Version
 import org.springframework.data.relational.core.mapping.Table
 import org.springframework.modulith.ApplicationModule
 
@@ -14,5 +15,6 @@ data class Account(
   val phone: String?,
   val card: String?,
   val balance: Long,
-  val active: Boolean
+  val active: Boolean,
+  @Version val version: Int = 0
 )

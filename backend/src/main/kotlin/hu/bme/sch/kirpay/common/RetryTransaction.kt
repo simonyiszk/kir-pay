@@ -1,10 +1,10 @@
 package hu.bme.sch.kirpay.common
 
+import org.springframework.dao.TransientDataAccessException
 import org.springframework.resilience.annotation.Retryable
-import java.sql.SQLException
 
 @Retryable(
-    value = [SQLException::class],
+    value = [TransientDataAccessException::class],
     maxRetries = 5,
     delay = 200,
     maxDelay = 750,

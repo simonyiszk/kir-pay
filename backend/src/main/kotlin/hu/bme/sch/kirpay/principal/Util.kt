@@ -7,6 +7,10 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.Clock
 
 
+data class PrincipalRef(val id: Int?, val name: String)
+
+fun Principal.toRef() = PrincipalRef(id, name)
+
 fun getLoggedInPrincipal(): Principal? = (SecurityContextHolder.getContext().authentication?.principal as? Principal)
 
 
@@ -40,11 +44,11 @@ fun getPrincipalAuthorities(principal: Principal): MutableCollection<out Granted
   if (principal.canTransfer) Permission.TRANSFER_FUNDS.name else null,
   if (principal.canUpload) Permission.UPLOAD_FUNDS.name else null,
   if (principal.canAssignCards) Permission.ASSIGN_CARDS.name else null,
-).map { SimpleGrantedAuthority("ROLE_$it") }.toMutableList()
+).map { SimpleGrantedAuthority(if (it == Role.TERMINAL.name || it == Role.ADMIN.name) "ROLE_$it" else it) }.toMutableList()
 
 
 private fun isRoleGranted(role: String, authorities: Collection<GrantedAuthority>) =
-  authorities.any { it.equals("ROLE_$role") }
+  authorities.any { it.authority == "ROLE_$role" || it.authority == role }
 
 
 fun PrincipalDto.toPrincipal(encoder: PasswordEncoder, clock: Clock): Principal {

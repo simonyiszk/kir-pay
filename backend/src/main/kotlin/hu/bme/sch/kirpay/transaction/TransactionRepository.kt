@@ -12,7 +12,7 @@ interface TransactionRepository : CrudRepository<Transaction, Int> {
   fun findAllOrderByTimestampDesc(): List<Transaction>
 
 
-  @Query("select * from transactions order by timestamp desc offset :skip rows fetch next :take rows only")
+  @Query("select * from transactions order by timestamp desc, id desc offset :skip rows fetch next :take rows only")
   fun findAllOrderByTimestampDescPaginated(skip: Long, take: Int): List<Transaction>
 
 

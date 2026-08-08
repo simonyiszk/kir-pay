@@ -1,4 +1,3 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useToast } from '@/components/ui/use-toast.ts'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu.tsx'
 import { Button } from '@/components/ui/button.tsx'
@@ -7,16 +6,31 @@ import { createPrincipal, exportPrincipals, exportPrincipalTemplate, importPrinc
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx'
 import { Label } from '@/components/ui/label.tsx'
 import { Input } from '@/components/ui/input.tsx'
-import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
+import { PrincipalDto } from '@/lib/api/model.ts'
 import { PrincipalForm } from '@/page/admin/principals/PrincipalForm.tsx'
 
 const CreatePrincipalDialog = ({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) => {
-  const { token } = useAppContext()
   const [error, setError] = useState<string>()
-  const [loading, setLoading] = useState(false)
   const queryClient = useQueryClient()
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  useEffect(() => {
+    if (open) idempotencyKeyRef.current = crypto.randomUUID()
+  }, [open])
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (principal: PrincipalDto) => createPrincipal({ ...principal, idempotencyKey: idempotencyKeyRef.current }),
+    onSuccess: (data) => {
+      if (data.result === 'Ok') {
+        setOpen(false)
+        queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Principals] })
+        return
+      }
+      setError(data.error || 'A principal létrehozása sikertelen!')
+    }
+  })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -25,21 +39,10 @@ const CreatePrincipalDialog = ({ open, setOpen }: { open: boolean; setOpen: (ope
           <DialogTitle>Principal létrehozása</DialogTitle>
           <PrincipalForm
             error={error}
-            loading={loading}
+            loading={isPending}
             onPrincipalSubmitted={(principal) => {
               setError(undefined)
-              setLoading(true)
-              createPrincipal(token, principal)
-                .then((data) => {
-                  if (data.result === 'Ok') {
-                    setOpen(false)
-                    queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Principals] })
-                    return
-                  }
-
-                  setError(data.error || 'A principal létrehozása sikertelen!')
-                })
-                .then(() => setLoading(false))
+              mutate(principal)
             }}
           />
         </DialogHeader>
@@ -48,11 +51,28 @@ const CreatePrincipalDialog = ({ open, setOpen }: { open: boolean; setOpen: (ope
   )
 }
 
-export const ImportDialog = ({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) => {
+const ImportDialog = ({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) => {
   const queryClient = useQueryClient()
   const { toast } = useToast()
-  const { token } = useAppContext()
   const [file, setFile] = useState<File>()
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  useEffect(() => {
+    if (open) idempotencyKeyRef.current = crypto.randomUUID()
+  }, [open])
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (csv: string) => importPrincipals(csv, idempotencyKeyRef.current),
+    onSuccess: (data) => {
+      if (data.result === 'Ok') {
+        toast({ description: 'Principalok importálása sikeres' })
+        setOpen(false)
+        queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Principals] })
+      } else {
+        toast({ description: `Hiba a principalok importálása közben: ${data.error ?? 'ismeretlen hiba'}` })
+      }
+    },
+    onError: (e: Error) => toast({ description: `Hiba a principalok importálása közben: ${e?.message ?? 'ismeretlen hiba'}` })
+  })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -61,23 +81,22 @@ export const ImportDialog = ({ open, setOpen }: { open: boolean; setOpen: (open:
           <DialogTitle>Principalok importálása</DialogTitle>
         </DialogHeader>
         <Label htmlFor="csv">Principalokkat tartalmazó .csv file (tartalmazhat több oszlopot mint a template)</Label>
-        <Input id="csv" type="file" accept="text/csv" onChange={(e) => setFile(e.target?.files?.item(0) || undefined)} />
+        <Input
+          id="csv"
+          type="file"
+          accept="text/csv"
+          onChange={(e) => {
+            idempotencyKeyRef.current = crypto.randomUUID()
+            setFile(e.target?.files?.item(0) || undefined)
+          }}
+        />
         <DialogFooter>
           <Button
-            disabled={!file}
+            disabled={!file || isPending}
             onClick={async () => {
               if (!file) return
-              file
-                .text()
-                .then((csv) => importPrincipals(token, csv))
-                .then((data) => {
-                  if (data.result === 'Ok') return data.data
-                  throw Error(data.error)
-                })
-                .then(() => toast({ description: 'Principalok importálása sikeres' }))
-                .then(() => setOpen(false))
-                .then(() => queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Principals] }))
-                .catch((e: Error) => toast({ description: `Hiba a principalok importálása közben: ${e?.message}` }))
+              const csv = await file.text()
+              mutate(csv)
             }}
             type="button"
           >
@@ -92,7 +111,6 @@ export const ImportDialog = ({ open, setOpen }: { open: boolean; setOpen: (open:
 export const PrincipalManagementDropdown = () => {
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const { token } = useAppContext()
   const { toast } = useToast()
 
   return (
@@ -106,7 +124,7 @@ export const PrincipalManagementDropdown = () => {
           <DropdownMenuItem
             onClick={() =>
               exportToCsv('principals.csv', () =>
-                exportPrincipals(token).then((data) => {
+                exportPrincipals().then((data) => {
                   if (data.result === 'Ok') return data.data
                   throw Error()
                 })
@@ -120,7 +138,7 @@ export const PrincipalManagementDropdown = () => {
           <DropdownMenuItem
             onClick={() =>
               exportToCsv('principals-template.csv', () =>
-                exportPrincipalTemplate(token).then((data) => {
+                exportPrincipalTemplate().then((data) => {
                   if (data.result === 'Ok') return data.data
                   throw Error()
                 })

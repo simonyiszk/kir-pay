@@ -9,7 +9,13 @@ export type Account = {
   color?: string
 }
 
-export type AppConfig = {
+export type IdempotentRequest = {
+  idempotencyKey: string
+}
+
+export type AccountCreateDto = Account & IdempotentRequest
+
+type AppConfig = {
   currencySymbol: string
   showUploadTab: boolean
   showPayTab: boolean
@@ -27,11 +33,13 @@ export type AppResponse = {
 
 export type BalanceAmountDto = {
   amount: number
+  idempotencyKey: string
 }
 
 export type BalanceTransferDto = {
   recipientCard: string
   amount: number
+  idempotencyKey: string
 }
 
 export type CardAssignDto = {
@@ -40,6 +48,7 @@ export type CardAssignDto = {
 
 export type CheckoutDto = {
   orderLines: Array<OrderLineDto>
+  idempotencyKey: string
 }
 
 export type Event = {
@@ -71,23 +80,9 @@ export type Item = {
   color?: string
 }
 
-export type Order = {
-  id?: number
-  accountId: number
-  timestamp: number
-}
+export type ItemCreateDto = Item & IdempotentRequest
 
-export type OrderLine = {
-  id?: number
-  orderId?: number
-  itemId?: number
-  itemCount: number
-  message?: string
-  usedVoucher: boolean
-  paidAmount: number
-}
-
-export type OrderLineDto = {
+type OrderLineDto = {
   itemId?: number
   itemCount: number
   usedVoucher: boolean
@@ -140,6 +135,8 @@ export type PrincipalDto = {
   active: boolean
 }
 
+export type PrincipalCreateDto = PrincipalDto & IdempotentRequest
+
 export type Transaction = {
   id?: number
   type: TransactionType
@@ -150,12 +147,12 @@ export type Transaction = {
   timestamp: number
 }
 
-export const TransactionType = {
+const TransactionType = {
   TopUp: 'TOP_UP',
   Transfer: 'TRANSFER',
   Charge: 'CHARGE'
 } as const
-export type TransactionType = (typeof TransactionType)[keyof typeof TransactionType]
+type TransactionType = (typeof TransactionType)[keyof typeof TransactionType]
 
 export type Voucher = {
   id?: number
@@ -164,7 +161,7 @@ export type Voucher = {
   count: number
 }
 
-export type VoucherWithItemName = {
+type VoucherWithItemName = {
   voucherId: number
   accountId?: number
   itemId: number
@@ -183,8 +180,20 @@ export type BatchVoucherDto = {
   count: number
 }
 
+export type BatchVoucherCreateDto = BatchVoucherDto & IdempotentRequest
+
 export type VoucherCountDto = {
   count: number
+}
+
+export type VoucherDeltaDto = {
+  delta: number
+} & IdempotentRequest
+
+export type VoucherImportResult = {
+  imported: number
+  total: number
+  errors: string[]
 }
 
 export type ValidatedApiCall<T> = { result: OkResultType; data: T } | { result: ErrorResultType; error?: string }
@@ -195,11 +204,23 @@ export const ResultType = {
   NotFound: 'NotFound',
   Unauthorized: 'Unauthorized',
   Forbidden: 'Forbidden',
+  UnprocessableEntity: 'UnprocessableEntity',
   OtherError: 'OtherError'
 } as const
 export type ResultType = (typeof ResultType)[keyof typeof ResultType]
 export type ErrorResultType = Exclude<(typeof ResultType)[keyof typeof ResultType], typeof ResultType.Ok>
-export type OkResultType = typeof ResultType.Ok
+type OkResultType = typeof ResultType.Ok
+
+export type SessionInfo = {
+  sessionId: string
+  principalName: string | null
+  ipAddress: string | null
+  userAgent: string | null
+  creationTime: number
+  lastAccessTime: number
+  maxInactiveInterval: number
+  expiryTime: number
+}
 
 export type ConsumptionLeaderboardEntry = {
   accountId: number

@@ -1,54 +1,38 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert.tsx'
 import { CircleDollarSign, CircleX } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { useAppContext } from '@/hooks/useAppContext.ts'
 import { RotatedForCustomer } from '@/components/RotatedForCustomer.tsx'
 import { ColorMarker } from '@/components/ColorMarker.tsx'
 import { AccountWithVouchers } from '@/lib/api/model.ts'
 import { findAccountByCard } from '@/lib/api/terminal.api.ts'
+import { useQuery } from '@tanstack/react-query'
 
-export const BalanceCheck = ({
-  showVouchers,
-  card,
-  loading,
-  setLoading
-}: {
-  showVouchers: boolean
-  card?: string
-  loading: boolean
-  setLoading: (loading: boolean) => void
-}) => {
-  const { token } = useAppContext()
-  const [balance, setBalance] = useState<AccountWithVouchers | null>()
-  const [error, setError] = useState<string>()
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setError(undefined)
-    if (!card) return
-
-    setLoading(true)
-    findAccountByCard(token, card).then((balance) => {
-      if (balance.result !== 'Ok') {
-        setError(balance.error || 'Sikertelen leolvasás')
-      } else {
-        setBalance(balance.data)
-      }
-      setLoading(false)
-    })
-  }, [card, token, setLoading])
+export const BalanceCheck = ({ showVouchers, card }: { showVouchers: boolean; card?: string }) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['AccountByCard', card],
+    queryFn: () => findAccountByCard(card!),
+    enabled: !!card
+  })
 
   if (!card) return null
 
-  if (loading)
+  if (isLoading)
     return (
       <div className="mt-4">
         <LoadingIndicator />
       </div>
     )
 
-  return <BalanceReadResult showVouchers={showVouchers} card={card} balance={balance} error={error} />
+  const balanceError = data && data.result !== 'Ok' ? data.error || `Sikertelen leolvasás (${data.result})` : undefined
+  return (
+    <BalanceReadResult
+      showVouchers={showVouchers}
+      card={card}
+      balance={data?.result === 'Ok' ? data.data : undefined}
+      error={balanceError}
+    />
+  )
 }
 
 const BalanceReadResult = ({
@@ -59,7 +43,7 @@ const BalanceReadResult = ({
 }: {
   showVouchers: boolean
   card: string
-  balance?: AccountWithVouchers | null
+  balance?: AccountWithVouchers
   error?: string
 }) => {
   const { currencySymbol } = useAppContext().config

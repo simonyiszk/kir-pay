@@ -1,32 +1,43 @@
 import { useState } from 'react'
-import { useNFCScanner } from '@/lib/utils.ts'
+import { useNFCScanner } from '@/hooks/useNFCScanner.ts'
 import { BalanceCheck } from '@/page/terminal/common/BalanceCheck.tsx'
 import { Button } from '@/components/ui/button.tsx'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert.tsx'
+import { CircleX, RefreshCw } from 'lucide-react'
 
 const BalanceCheckPage = () => {
   const [card, setCard] = useState<string>()
-  const [loading, setLoading] = useState<boolean>(false)
+  const [scanRetry, setScanRetry] = useState(0)
 
-  useNFCScanner(
+  const { error } = useNFCScanner(
     async (event) => {
-      if (loading) return
       setCard(event.serialNumber)
     },
-    [loading]
+    [scanRetry]
   )
 
   return (
     <div className="flex items-center flex-col gap-4">
       <h1 className="font-bold text-2xl pb-2 text-center">Érints kártyát az eszközhöz...</h1>
 
-      <BalanceCheck showVouchers={true} card={card} loading={loading} setLoading={setLoading} />
-      {card && !loading && (
+      {error && (
+        <Alert className="w-auto">
+          <CircleX className="px-1" />
+          <AlertTitle>NFC hiba</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+          <Button className="mt-2 w-full" onClick={() => setScanRetry((prev) => prev + 1)}>
+            <RefreshCw className="mr-1 w-4 h-4" /> Újra
+          </Button>
+        </Alert>
+      )}
+
+      <BalanceCheck showVouchers={true} card={card} />
+      {card && (
         <Button
           variant="secondary"
           className="w-full"
           onClick={() => {
             setCard(undefined)
-            setLoading(false)
           }}
         >
           Vissza

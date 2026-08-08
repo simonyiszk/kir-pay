@@ -16,14 +16,16 @@ class TransactionAdminController(
 ) {
   private val transactionParser = parserFactory.getParserForType(Transaction::class)
 
-
   @GetMapping("/transactions")
   fun getTransactionsPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
     if (page == null && size == null)
       transactionService.findAll()
-    else
-      transactionService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
-
+    else {
+      val p = page ?: DEFAULT_PAGE
+      val s = size ?: DEFAULT_PAGE_SIZE
+      requireValidPagination(p, s)
+      transactionService.findPaginated(p, s)
+    }
 
   @GetMapping("/export/transactions", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
   fun exportTransactions(): ResponseEntity<String> {

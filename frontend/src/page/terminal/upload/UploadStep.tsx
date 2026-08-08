@@ -1,30 +1,37 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { BalanceCheck } from '@/page/terminal/common/BalanceCheck.tsx'
 import { cn } from '@/lib/utils.ts'
+import CheckAnimation from '@/components/CheckAnimation.tsx'
 import { ResultType } from '@/lib/api/model.ts'
 import { uploadBalance } from '@/lib/api/terminal.api.ts'
+import { useMutation } from '@tanstack/react-query'
 
 export const UploadStep = ({ onReset, card, amount }: { onReset: () => void; card: string; amount: number }) => {
-  const { token } = useAppContext()
   const [retries, setRetries] = useState(0)
   const [status, setStatus] = useState<ResultType>()
   const [message, setMessage] = useState<string>()
   const [error, setError] = useState<string>()
-  const [balanceCheckLoading, setBalanceCheckLoading] = useState(false)
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  const submittedRef = useRef(false)
+
+  const { mutate } = useMutation({
+    mutationFn: () => uploadBalance(card, { amount, idempotencyKey: idempotencyKeyRef.current }),
+    onSuccess: (data) => {
+      setStatus(data.result)
+      if (data.result !== 'Ok') {
+        setMessage(data.error ?? 'Hiba történt!')
+      }
+    },
+    onError: () => setError('A feltöltés sikertelen!')
+  })
 
   useEffect(() => {
-    uploadBalance(token, card, { amount })
-      .then((data) => {
-        setStatus(data.result)
-        if (data.result !== 'Ok') {
-          setMessage(data.error)
-        }
-      })
-      .catch(() => setError('A feltöltés sikertelen!'))
-  }, [card, amount, message, retries, token])
+    if (submittedRef.current) return
+    submittedRef.current = true
+    mutate()
+  }, [card, amount, retries, mutate])
 
   if (error)
     return (
@@ -39,6 +46,7 @@ export const UploadStep = ({ onReset, card, amount }: { onReset: () => void; car
           onClick={() => {
             setError(undefined)
             setStatus(undefined)
+            submittedRef.current = false
             setRetries(retries + 1)
           }}
         >
@@ -57,16 +65,20 @@ export const UploadStep = ({ onReset, card, amount }: { onReset: () => void; car
       </>
     )
 
-  return (
+  const data = (
     <>
       <h1 className={cn('font-bold text-2xl pb-2 text-center', status !== 'Ok' && 'text-destructive')}>
         {status !== 'Ok' ? message : 'Sikeres tranzakció!'}
       </h1>
-      <BalanceCheck showVouchers={true} card={card} loading={balanceCheckLoading} setLoading={setBalanceCheckLoading} />
+      <BalanceCheck showVouchers={true} card={card} />
 
       <Button variant="secondary" className="w-full" onClick={onReset}>
         Új feltöltés
       </Button>
     </>
   )
+  if (status === 'Ok') {
+    return <CheckAnimation>{data}</CheckAnimation>
+  }
+  return data
 }

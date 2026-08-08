@@ -1,18 +1,24 @@
 package hu.bme.sch.kirpay.account
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Table
-import org.springframework.modulith.ApplicationModule
+import jakarta.persistence.*
+import java.math.BigInteger
 
-
-@ApplicationModule
-@Table("accounts")
+@Entity
+@Table(name = "accounts")
 data class Account(
-  @Id var id: Int?,
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  var id: Int? = null,
+  @Column(nullable = false)
   val name: String,
   val email: String?,
   val phone: String?,
+  @Column(unique = true)
   val card: String?,
-  val balance: Long,
-  val active: Boolean
+  @Column(nullable = false, precision = 38)
+  val balance: BigInteger,
+  @Column(nullable = false)
+  val active: Boolean,
+  @Version
+  val version: Int = 0
 )

@@ -1,5 +1,4 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { fuzzySearch } from '@/lib/utils.ts'
 import { useEffect, useState } from 'react'
@@ -17,10 +16,9 @@ import { findAllAccounts } from '@/lib/api/terminal.api.ts'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 
 export const SelectAccountStep = ({ setAccount }: { setAccount: (account: Account) => void }) => {
-  const { token } = useAppContext()
   const accountsQuery = useQuery({
-    queryKey: [AppQueryKeys.Accounts, token],
-    queryFn: () => findAllAccounts(token),
+    queryKey: [AppQueryKeys.Accounts],
+    queryFn: () => findAllAccounts(),
     placeholderData: keepPreviousData
   })
 

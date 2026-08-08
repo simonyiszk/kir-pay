@@ -20,14 +20,7 @@ const TransferPage = () => {
     currentStep = <TransferAmountEnterStep sender={sender} setAmount={setAmount} onAbort={reset} />
   } else if (!recipient) {
     currentStep = (
-      <ScanCardStep
-        setCard={setRecipient}
-        message="Scanneld le a szerencsés fogadó kártyáját!"
-        amount={amount}
-        onAbort={() => {
-          setAmount(undefined)
-        }}
-      />
+      <ScanCardStep setCard={setRecipient} message="Scanneld le a szerencsés fogadó kártyáját!" amount={amount} onAbort={reset} />
     )
   } else {
     currentStep = <TransferStep amount={amount} recipient={recipient} sender={sender} onReset={reset} />

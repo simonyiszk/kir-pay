@@ -27,6 +27,7 @@ const TabsTrigger = React.forwardRef<
       className
     )}
     {...props}
+    data-value={(props as { value?: string }).value}
   />
 ))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping(ADMIN_API)
@@ -22,14 +23,16 @@ class OrderAdminController(
   private val orderWithOrderLineParser = parserFactory.getParserForType(OrderWithOrderLine::class)
   private val voucherParser = parserFactory.getParserForType(VoucherDto::class)
 
-
   @GetMapping("/orders")
   fun getOrdersPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
     if (page == null && size == null)
       orderService.findAll()
-    else
-      orderService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
-
+    else {
+      val p = page ?: DEFAULT_PAGE
+      val s = size ?: DEFAULT_PAGE_SIZE
+      requireValidPagination(p, s)
+      orderService.findPaginated(p, s)
+    }
 
   @GetMapping("/export/orders", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
   fun exportOrders(): ResponseEntity<String> {
@@ -39,16 +42,18 @@ class OrderAdminController(
       .body(orderParser.toCsv(orders))
   }
 
-
   @GetMapping("/orders-with-order-lines")
   fun getOrdersWithOrderLinesPaginated(
     @RequestParam(required = false) page: Int?,
     @RequestParam(required = false) size: Int?
   ) = if (page == null && size == null)
     orderService.findAllOrdersWithOrderLines()
-  else
-    orderService.findAllOrdersWithOrderLinesPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
-
+  else {
+    val p = page ?: DEFAULT_PAGE
+    val s = size ?: DEFAULT_PAGE_SIZE
+    requireValidPagination(p, s)
+    orderService.findAllOrdersWithOrderLinesPaginated(p, s)
+  }
 
   @GetMapping("/export/orders-with-order-lines", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
   fun exportOrdersWithOrderLinesPaginated(): ResponseEntity<String> {
@@ -58,14 +63,16 @@ class OrderAdminController(
       .body(orderWithOrderLineParser.toCsv(ordersWithOrderLines))
   }
 
-
   @GetMapping("/order_lines")
   fun getOrderLinesPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
     if (page == null && size == null)
       orderLineService.findAll()
-    else
-      orderLineService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
-
+    else {
+      val p = page ?: DEFAULT_PAGE
+      val s = size ?: DEFAULT_PAGE_SIZE
+      requireValidPagination(p, s)
+      orderLineService.findPaginated(p, s)
+    }
 
   @GetMapping("/export/order_lines", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
   fun exportOrderLines(): ResponseEntity<String> {
@@ -75,32 +82,31 @@ class OrderAdminController(
       .body(orderLineParser.toCsv(orderLines))
   }
 
-
   @GetMapping("/vouchers")
   fun getVouchersPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
     if (page == null && size == null)
       voucherService.findAll()
-    else
-      voucherService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
-
+    else {
+      val p = page ?: DEFAULT_PAGE
+      val s = size ?: DEFAULT_PAGE_SIZE
+      requireValidPagination(p, s)
+      voucherService.findPaginated(p, s)
+    }
 
   @DeleteMapping("/vouchers/{voucherId}")
   fun deleteVoucher(@PathVariable voucherId: Int) = voucherService.delete(voucherId)
 
-
-  // NotNull is only applied when parsing
   data class VoucherDto(@field:NotNull val accountId: Int?, val itemId: Int, @field:Min(0) val count: Int)
 
   @PostMapping("/vouchers")
   fun createVoucher(@Valid @RequestBody voucher: VoucherDto) = voucherService.saveVoucher(voucher)
 
-
-  data class VoucherBatchDto(@field:Min(0) val count: Int, val accounts: List<Int>)
+  data class VoucherBatchDto(@field:Min(0) val count: Int, val accounts: List<Int>, val idempotencyKey: UUID)
 
   @PostMapping("/items/{itemId}/voucher")
-  fun createBatchVoucher(@Valid @RequestBody dto: VoucherBatchDto, @PathVariable itemId: Int) =
+  fun createBatchVoucher(@Valid @RequestBody dto: VoucherBatchDto, @PathVariable itemId: Int) {
     voucherService.createBatchVoucher(itemId, dto)
-
+  }
 
   data class VoucherCountDto(@field:Min(0) val count: Int)
 
@@ -108,6 +114,11 @@ class OrderAdminController(
   fun updateVoucherCount(@PathVariable voucherId: Int, @Valid @RequestBody dto: VoucherCountDto) =
     voucherService.updateVoucherCount(voucherId, dto.count)
 
+  data class VoucherDeltaDto(val delta: Int, val idempotencyKey: UUID)
+
+  @PostMapping("/vouchers/{voucherId}/increment")
+  fun incrementVoucherCount(@PathVariable voucherId: Int, @Valid @RequestBody dto: VoucherDeltaDto) =
+    voucherService.incrementCount(voucherId, dto.delta, dto.idempotencyKey)
 
   @GetMapping("/export/vouchers", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
   fun exportVouchers(): ResponseEntity<String> {
@@ -119,14 +130,14 @@ class OrderAdminController(
       }))
   }
 
+  data class VoucherImportResult(val imported: Int, val total: Int, val errors: List<String>)
 
   @PostMapping("/import/vouchers", consumes = [MediaType.TEXT_PLAIN_VALUE])
   @ResponseStatus(HttpStatus.CREATED)
-  fun importVouchers(@RequestBody csv: String) {
+  fun importVouchers(@RequestBody csv: String, @RequestParam idempotencyKey: UUID): VoucherImportResult {
     val vouchers = voucherParser.fromCsv(csv)
-    voucherService.importVouchers(vouchers)
+    return voucherService.importVouchers(vouchers, idempotencyKey, csv)
   }
-
 
   @GetMapping("/template/vouchers", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
   fun voucherExportTemplate(): ResponseEntity<String> {
@@ -136,12 +147,12 @@ class OrderAdminController(
       .body(voucherParser.toCsv(vouchers))
   }
 
-
   @GetMapping("/consumption-leaderboard")
-  fun getConsumptionLeaderboard(@RequestParam(defaultValue = "10") limit: Int) = orderService.getConsumptionLeaderboard(limit)
-
+  fun getConsumptionLeaderboard(@RequestParam(defaultValue = "10") limit: Int) =
+    orderService.getConsumptionLeaderboard(limit)
 
   @GetMapping("/item-leaderboard")
-  fun getConsumptionLeaderboardByItem(@RequestParam(defaultValue = "10") limit: Int) = orderLineService.getConsumptionLeaderboardByItem(limit)
+  fun getConsumptionLeaderboardByItem(@RequestParam(defaultValue = "10") limit: Int) =
+    orderLineService.getConsumptionLeaderboardByItem(limit)
 
 }

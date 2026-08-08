@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint'
 import tanstackQuery from '@tanstack/eslint-plugin-query'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'e2e/**']),
   ...tanstackQuery.configs['flat/recommended'],
   {
     files: ['**/*.{ts,tsx}'],
@@ -15,6 +15,12 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser
+    }
+  },
+  {
+    files: ['src/components/ui/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off'
     }
   }
 ])

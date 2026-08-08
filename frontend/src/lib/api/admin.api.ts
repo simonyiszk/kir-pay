@@ -1,20 +1,24 @@
-import { addColorToListResponse, addColorToResponse, getApiRoot, httpDelete, httpGet, httpPost } from '@/lib/api/common.api.ts'
+import { addColorToListResponse, addColorToResponse, getApiRoot, httpDelete, httpGet, httpPost, httpPut } from '@/lib/api/common.api.ts'
 import {
   Account,
+  AccountCreateDto,
   AnalyticsDto,
-  BatchVoucherDto,
+  BatchVoucherCreateDto,
   ConsumptionLeaderboardEntry,
   Event,
   Item,
+  ItemCreateDto,
   ItemLeaderboardEntry,
-  Order,
-  OrderLine,
   OrderWithOrderLine,
   Principal,
+  PrincipalCreateDto,
   PrincipalDto,
+  SessionInfo,
   Transaction,
   Voucher,
-  VoucherCountDto
+  VoucherCountDto,
+  VoucherDeltaDto,
+  VoucherImportResult
 } from '@/lib/api/model.ts'
 
 const getUrl = (endpoint: string, params?: object) => {
@@ -25,175 +29,165 @@ const getUrl = (endpoint: string, params?: object) => {
   return url
 }
 
-export const getAnalytics = (token: string) => httpGet<AnalyticsDto>({ url: getUrl('analytics'), token })
+export const getAnalytics = () => httpGet<AnalyticsDto>({ url: getUrl('analytics') })
 
-export const findAllPrincipals = (token: string) => httpGet<Principal[]>({ url: getUrl('principals'), token })
+export const findAllPrincipals = () => httpGet<Principal[]>({ url: getUrl('principals') })
 
-export const createPrincipal = (token: string, data: PrincipalDto) =>
-  httpPost<PrincipalDto, Principal>({ url: getUrl('principals'), data, token })
+export const createPrincipal = (data: PrincipalCreateDto) => httpPost<PrincipalCreateDto, Principal>({ url: getUrl('principals'), data })
 
-export const updatePrincipal = (token: string, principalId: number, data: PrincipalDto) =>
-  httpPost<PrincipalDto, Principal>({ url: getUrl(`principals/${principalId}`), data, token })
+export const updatePrincipal = (principalId: number, data: PrincipalDto) =>
+  httpPost<PrincipalDto, Principal>({ url: getUrl(`principals/${principalId}`), data })
 
-export const deletePrincipal = (token: string, principalId: number) =>
-  httpDelete<undefined>({ url: getUrl(`principals/${principalId}`), token, parseJson: false })
+export const deletePrincipal = (principalId: number) =>
+  httpDelete<undefined>({ url: getUrl(`principals/${principalId}`), parseJson: false })
 
-export const enablePrincipal = (token: string, principalId: number) =>
-  httpPost<undefined, Principal>({ url: getUrl(`principals/${principalId}/enable`), data: undefined, token })
+export const enablePrincipal = (principalId: number) =>
+  httpPost<undefined, Principal>({ url: getUrl(`principals/${principalId}/enable`), data: undefined })
 
-export const disablePrincipal = (token: string, principalId: number) =>
-  httpPost<undefined, Principal>({ url: getUrl(`principals/${principalId}/disable`), data: undefined, token })
+export const disablePrincipal = (principalId: number) =>
+  httpPost<undefined, Principal>({ url: getUrl(`principals/${principalId}/disable`), data: undefined })
 
-export const exportPrincipalTemplate = (token: string) => httpGet<string>({ url: getUrl('template/principals'), token, parseJson: false })
+export const exportPrincipalTemplate = () => httpGet<string>({ url: getUrl('template/principals'), parseJson: false })
 
-export const exportPrincipals = (token: string) => httpGet<string>({ url: getUrl('export/principals'), token, parseJson: false })
+export const exportPrincipals = () => httpGet<string>({ url: getUrl('export/principals'), parseJson: false })
 
-export const importPrincipals = (token: string, csv: string) =>
-  httpPost<string, undefined>({ url: getUrl('import/principals'), token, data: csv, parseJson: false })
+export const importPrincipals = (csv: string, idempotencyKey: string) =>
+  httpPost<string, undefined>({ url: getUrl('import/principals', { idempotencyKey }), data: csv, parseJson: false })
 
-export const findAllItems = (token: string) =>
+export const findAllItems = () =>
   httpGet<Item[]>({
     url: getUrl('items'),
-    token,
     mapResponse: addColorToListResponse
   })
 
-export const findItemById = (token: string, itemId: number) =>
+export const findItemById = (itemId: number) =>
   httpGet<Item>({
     url: getUrl(`items/${itemId}`),
-    token,
     mapResponse: addColorToResponse
   })
 
-export const createItem = (token: string, data: Item) =>
-  httpPost<Item, Item>({ url: getUrl('items'), data, token, mapResponse: addColorToResponse })
+export const createItem = (data: ItemCreateDto) =>
+  httpPost<ItemCreateDto, Item>({ url: getUrl('items'), data, mapResponse: addColorToResponse })
 
-export const updateItem = (token: string, itemId: number, data: Item) =>
-  httpPost<Item, Item>({ url: getUrl(`items/${itemId}`), data, token, mapResponse: addColorToResponse })
+export const updateItem = (itemId: number, data: Item) =>
+  httpPut<Item, Item>({ url: getUrl(`items/${itemId}`), data, mapResponse: addColorToResponse })
 
-export const deleteItem = (token: string, itemId: number) =>
-  httpDelete<undefined>({ url: getUrl(`items/${itemId}`), token, parseJson: false })
+export const deleteItem = (itemId: number) => httpDelete<undefined>({ url: getUrl(`items/${itemId}`), parseJson: false })
 
-export const enableItem = (token: string, itemId: number) =>
+export const enableItem = (itemId: number) =>
   httpPost<undefined, Item>({
     url: getUrl(`items/${itemId}/enable`),
     data: undefined,
-    token,
     mapResponse: addColorToResponse
   })
 
-export const disableItem = (token: string, itemId: number) =>
+export const disableItem = (itemId: number) =>
   httpPost<undefined, Item>({
     url: getUrl(`items/${itemId}/disable`),
     data: undefined,
-    token,
     mapResponse: addColorToResponse
   })
 
-export const exportItemTemplate = (token: string) => httpGet<string>({ url: getUrl('template/items'), token, parseJson: false })
+export const exportItemTemplate = () => httpGet<string>({ url: getUrl('template/items'), parseJson: false })
 
-export const exportItems = (token: string) => httpGet<string>({ url: getUrl('export/items'), token, parseJson: false })
+export const exportItems = () => httpGet<string>({ url: getUrl('export/items'), parseJson: false })
 
-export const importItems = (token: string, csv: string) =>
-  httpPost<string, undefined>({ url: getUrl('import/items'), token, data: csv, parseJson: false })
+export const importItems = (csv: string, idempotencyKey: string) =>
+  httpPost<string, undefined>({ url: getUrl('import/items', { idempotencyKey }), data: csv, parseJson: false })
 
-export const createAccount = (token: string, data: Account) =>
-  httpPost<Account, Account>({ url: getUrl('accounts'), data, token, mapResponse: addColorToResponse })
+export const createAccount = (data: AccountCreateDto) =>
+  httpPost<AccountCreateDto, Account>({ url: getUrl('accounts'), data, mapResponse: addColorToResponse })
 
-export const updateAccount = (token: string, accountId: number, data: Account) =>
+export const updateAccount = (accountId: number, data: Account) =>
   httpPost<Account, Account>({
     url: getUrl(`accounts/${accountId}`),
     data,
-    token,
     mapResponse: addColorToResponse
   })
 
-export const deleteAccount = (token: string, accountId: number) =>
-  httpDelete<undefined>({ url: getUrl(`accounts/${accountId}`), token, parseJson: false })
+export const deleteAccount = (accountId: number) => httpDelete<undefined>({ url: getUrl(`accounts/${accountId}`), parseJson: false })
 
-export const enableAccount = (token: string, accountId: number) =>
+export const enableAccount = (accountId: number) =>
   httpPost<undefined, Account>({
     url: getUrl(`accounts/${accountId}/enable`),
     data: undefined,
-    token,
     mapResponse: addColorToResponse
   })
 
-export const disableAccount = (token: string, accountId: number) =>
+export const disableAccount = (accountId: number) =>
   httpPost<undefined, Account>({
     url: getUrl(`accounts/${accountId}/disable`),
     data: undefined,
-    token,
     mapResponse: addColorToResponse
   })
 
-export const exportAccountTemplate = (token: string) => httpGet<string>({ url: getUrl('template/accounts'), token, parseJson: false })
+export const exportAccountTemplate = () => httpGet<string>({ url: getUrl('template/accounts'), parseJson: false })
 
-export const exportAccounts = (token: string) => httpGet<string>({ url: getUrl('export/accounts'), token, parseJson: false })
+export const exportAccounts = () => httpGet<string>({ url: getUrl('export/accounts'), parseJson: false })
 
-export const importAccounts = (token: string, csv: string) =>
-  httpPost<string, undefined>({ url: getUrl('import/accounts'), token, data: csv, parseJson: false })
+export const importAccounts = (csv: string, idempotencyKey: string) =>
+  httpPost<string, undefined>({ url: getUrl('import/accounts', { idempotencyKey }), data: csv, parseJson: false })
 
-export const findAllVouchers = (token: string) => httpGet<Voucher[]>({ url: getUrl('vouchers'), token })
+export const findAllVouchers = () => httpGet<Voucher[]>({ url: getUrl('vouchers') })
 
-export const createVoucher = (token: string, data: Voucher) => httpPost<Voucher, Voucher>({ url: getUrl('vouchers'), data, token })
+export const createVoucher = (data: Voucher) => httpPost<Voucher, Voucher>({ url: getUrl('vouchers'), data })
 
-export const createBatchVoucher = (token: string, data: BatchVoucherDto) =>
-  httpPost<BatchVoucherDto, Voucher>({ url: getUrl(`items/${data.itemId}/voucher`), data, token })
+export const createBatchVoucher = (data: BatchVoucherCreateDto) =>
+  httpPost<BatchVoucherCreateDto, Voucher>({ url: getUrl(`items/${data.itemId}/voucher`), data })
 
-export const updateVoucher = (token: string, voucherId: number, data: VoucherCountDto) =>
-  httpPost<VoucherCountDto, Voucher>({ url: getUrl(`vouchers/${voucherId}/count`), data, token })
+export const updateVoucher = (voucherId: number, data: VoucherCountDto) =>
+  httpPost<VoucherCountDto, Voucher>({ url: getUrl(`vouchers/${voucherId}/count`), data })
 
-export const deleteVoucher = (token: string, voucherId: number) =>
-  httpDelete<undefined>({ url: getUrl(`vouchers/${voucherId}`), token, parseJson: false })
+export const incrementVoucherCount = (voucherId: number, data: VoucherDeltaDto) =>
+  httpPost<VoucherDeltaDto, Voucher>({ url: getUrl(`vouchers/${voucherId}/increment`), data })
 
-export const exportVoucherTemplate = (token: string) => httpGet<string>({ url: getUrl('template/vouchers'), token, parseJson: false })
+export const deleteVoucher = (voucherId: number) => httpDelete<undefined>({ url: getUrl(`vouchers/${voucherId}`), parseJson: false })
 
-export const exportVouchers = (token: string) => httpGet<string>({ url: getUrl('export/vouchers'), token, parseJson: false })
+export const exportVoucherTemplate = () => httpGet<string>({ url: getUrl('template/vouchers'), parseJson: false })
 
-export const importVouchers = (token: string, csv: string) =>
-  httpPost<string, undefined>({ url: getUrl('import/vouchers'), token, data: csv, parseJson: false })
+export const exportVouchers = () => httpGet<string>({ url: getUrl('export/vouchers'), parseJson: false })
 
-export const findAllOrders = (token: string, page?: number, size?: number) =>
-  httpGet<Order[]>({ url: getUrl('orders', { page, size }), token })
+export const importVouchers = (csv: string, idempotencyKey: string) =>
+  httpPost<string, VoucherImportResult>({
+    url: getUrl('import/vouchers', { idempotencyKey }),
+    data: csv,
+    parseJson: false,
+    mapResponse: (data) => JSON.parse(data as string) as VoucherImportResult
+  })
 
-export const exportOrders = (token: string) => httpGet<string>({ url: getUrl('export/orders'), token, parseJson: false })
+export const exportOrders = () => httpGet<string>({ url: getUrl('export/orders'), parseJson: false })
 
-export const findAllOrderLines = (token: string, page?: number, size?: number) =>
-  httpGet<OrderLine[]>({ url: getUrl('order_lines', { page, size }), token })
+export const exportOrderLines = () => httpGet<string>({ url: getUrl('export/order_lines'), parseJson: false })
 
-export const exportOrderLines = (token: string) => httpGet<string>({ url: getUrl('export/order_lines'), token, parseJson: false })
+export const findAllOrdersWithOrderLines = (page?: number, size?: number) =>
+  httpGet<OrderWithOrderLine[]>({ url: getUrl('orders-with-order-lines', { page, size }) })
 
-export const findAllOrdersWithOrderLines = (token: string, page?: number, size?: number) =>
-  httpGet<OrderWithOrderLine[]>({ url: getUrl('orders-with-order-lines', { page, size }), token })
+export const exportOrdersWithOrderLines = () => httpGet<string>({ url: getUrl('export/orders-with-order-lines'), parseJson: false })
 
-export const exportOrdersWithOrderLines = (token: string) =>
-  httpGet<string>({ url: getUrl('export/orders-with-order-lines'), token, parseJson: false })
-
-export const findAllEvents = (token: string, page?: number, size?: number) =>
+export const findAllEvents = (page?: number, size?: number) =>
   httpGet<Event[]>({
     url: getUrl('events', { page, size }),
-    token,
-    mapResponse: (res) => addColorToListResponse(res, (event) => event.event)
+    mapResponse: (data) => addColorToListResponse(data, (event: Event) => event.event)
   })
 
-export const getConsumptionLeaderboard = (token: string, limit: number) =>
+export const getConsumptionLeaderboard = (limit: number) =>
   httpGet<ConsumptionLeaderboardEntry[]>({
     url: getUrl('consumption-leaderboard', { limit }),
-    token,
-    mapResponse: (res) => addColorToListResponse(res, (entry) => entry.accountId?.toString() || '')
+    mapResponse: (data) => addColorToListResponse(data, (entry: ConsumptionLeaderboardEntry) => entry.accountId?.toString() || '')
   })
 
-export const getItemLeaderboard = (token: string, limit: number) =>
+export const getItemLeaderboard = (limit: number) =>
   httpGet<ItemLeaderboardEntry[]>({
     url: getUrl('item-leaderboard', { limit }),
-    token,
-    mapResponse: (res) => addColorToListResponse(res, (entry) => entry.itemId?.toString() || '')
+    mapResponse: (data) => addColorToListResponse(data, (entry: ItemLeaderboardEntry) => entry.itemId?.toString() || '')
   })
 
-export const exportEvents = (token: string) => httpGet<string>({ url: getUrl('export/events'), token, parseJson: false })
+export const exportEvents = () => httpGet<string>({ url: getUrl('export/events'), parseJson: false })
 
-export const findAllTransactions = (token: string, page?: number, size?: number) =>
-  httpGet<Transaction[]>({ url: getUrl('transactions', { page, size }), token })
+export const findAllTransactions = (page?: number, size?: number) => httpGet<Transaction[]>({ url: getUrl('transactions', { page, size }) })
 
-export const exportTransactions = (token: string) => httpGet<string>({ url: getUrl('export/transactions'), token, parseJson: false })
+export const exportTransactions = () => httpGet<string>({ url: getUrl('export/transactions'), parseJson: false })
+
+export const findAllSessions = (page?: number, size?: number) => httpGet<SessionInfo[]>({ url: getUrl('sessions', { page, size }) })
+
+export const deleteSession = (sessionId: string) => httpDelete<undefined>({ url: getUrl(`sessions/${sessionId}`), parseJson: false })

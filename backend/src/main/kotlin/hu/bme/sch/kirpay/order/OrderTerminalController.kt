@@ -13,10 +13,8 @@ class OrderTerminalController(
   private val itemService: ItemService,
   private val orderService: OrderService
 ) {
-
   @GetMapping("/items")
   fun getAllItems() = itemService.findAllActive()
-
 
   data class OrderLineDto(
     val itemId: Int?,
@@ -26,12 +24,20 @@ class OrderTerminalController(
     val paidAmount: Long?
   )
 
-  data class CheckoutDto(@field:Size(min = 1) val orderLines: List<@Valid @NotNull OrderLineDto>)
+  data class CheckoutDto(
+    @field:Size(min = 1) val orderLines: List<@Valid @NotNull OrderLineDto>,
+    @field:NotNull val idempotencyKey: java.util.UUID
+  )
 
   @PostMapping("/account-by-card/{card}/checkout")
   fun checkout(
     @PathVariable card: String,
     @Valid @RequestBody dto: CheckoutDto
-  ) = orderService.checkout(card, dto)
+  ): Map<String, Any?> {
+    val result = orderService.checkout(card, dto)
+    return mapOf("orderId" to result.order.id,
+      "idempotencyKey" to result.order.idempotencyKey,
+      "replayed" to result.replayed)
+  }
 
 }

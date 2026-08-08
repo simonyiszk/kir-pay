@@ -1,5 +1,4 @@
 import { ValidatedApiCall, Voucher } from '@/lib/api/model.ts'
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useQuery } from '@tanstack/react-query'
 import { findAllVouchers } from '@/lib/api/admin.api.ts'
 import { VoucherManagementDropdown } from '@/page/admin/vouchers/VoucherManagementDropdown.tsx'
@@ -50,10 +49,9 @@ const VouchersTable = ({ vouchers }: { vouchers?: ValidatedApiCall<Voucher[]> })
 }
 
 export const VouchersPage = () => {
-  const { token } = useAppContext()
   const vouchers = useQuery({
-    queryKey: [AppQueryKeys.Vouchers, token],
-    queryFn: () => findAllVouchers(token),
+    queryKey: [AppQueryKeys.Vouchers],
+    queryFn: () => findAllVouchers(),
     refetchInterval: DataRefetchInterval,
     staleTime: DataRefetchInterval
   })

@@ -5,9 +5,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { X } from 'lucide-react'
 import { Input } from '@/components/ui/input.tsx'
 import { Button } from '@/components/ui/button.tsx'
-import { createToken } from '@/lib/api/common.api.ts'
-import { getAppData } from '@/lib/api/terminal.api.ts'
+import { login } from '@/lib/api/common.api.ts'
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 
@@ -16,8 +16,7 @@ const loginSchema = z.object({
   password: z.string().min(1)
 })
 
-export const LoginDialog = ({ setToken }: { setToken: (token: string) => void }) => {
-  const [loading, setLoading] = useState(false)
+export const LoginDialog = ({ onLogin }: { onLogin: () => void }) => {
   const [message, setMessage] = useState<string>()
 
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -25,27 +24,31 @@ export const LoginDialog = ({ setToken }: { setToken: (token: string) => void })
     defaultValues: { accountname: '', password: '' }
   })
 
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: { username: string; password: string }) => login(data.username, data.password),
+    onSuccess: (result) => {
+      if (result.result == 'Ok') {
+        onLogin()
+        return
+      }
+      if (result.result === 'Unauthorized') {
+        setMessage('Hibás felhasználónév vagy jelszó')
+      } else if (result.result == 'Forbidden') {
+        setMessage('Nincs jogod használni az alkalmazást!')
+      } else {
+        setMessage(result.error || 'A belépés sikertelen!')
+      }
+    },
+    onError: () => setMessage('A belépés sikertelen!')
+  })
+
   return (
     <Card className="max-w-[20rem] w-full">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(async (data) => {
-            setLoading(true)
             setMessage(undefined)
-            const token = createToken(data.accountname, data.password)
-            const result = await getAppData(token)
-            if (result.result == 'Ok') {
-              setToken(token)
-              return
-            }
-            setLoading(false)
-            if (result.result === 'Unauthorized') {
-              setMessage('Hibás felhasználónév vagy jelszó')
-            } else if (result.result == 'Forbidden') {
-              setMessage('Nincs jogod használni az alkalmazást!')
-            } else {
-              setMessage(result.error || 'A belépés sikertelen!')
-            }
+            mutate({ username: data.accountname, password: data.password })
           })}
         >
           <CardHeader>
@@ -58,12 +61,19 @@ export const LoginDialog = ({ setToken }: { setToken: (token: string) => void })
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Felhasználónév</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <X className="w-4 h-4 m-auto mr-3 absolute top-0 bottom-0 right-0" onClick={() => form.setValue('accountname', '')} />
+                  <div className="relative">
+                    <FormControl>
                       <Input autoComplete="accountname" placeholder="admin" {...field} />
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                    <button
+                      type="button"
+                      className="absolute top-0 bottom-0 right-0 mr-3 flex items-center"
+                      aria-label="Felhasználónév törlése"
+                      onClick={() => form.setValue('accountname', '')}
+                    >
+                      <X className="w-4 h-4" aria-hidden="true" />
+                    </button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -75,19 +85,26 @@ export const LoginDialog = ({ setToken }: { setToken: (token: string) => void })
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Jelszó</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <X className="w-4 h-4 m-auto mr-3 absolute top-0 bottom-0 right-0" onClick={() => form.setValue('password', '')} />
+                  <div className="relative">
+                    <FormControl>
                       <Input autoComplete="current-password" type="password" placeholder="admin" {...field} />
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                    <button
+                      type="button"
+                      className="absolute top-0 bottom-0 right-0 mr-3 flex items-center"
+                      aria-label="Jelszó törlése"
+                      onClick={() => form.setValue('password', '')}
+                    >
+                      <X className="w-4 h-4" aria-hidden="true" />
+                    </button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </CardContent>
           <CardFooter className="flex flex-col">
-            {loading && (
+            {isPending && (
               <div className="pb-2">
                 <LoadingIndicator />
               </div>
@@ -97,7 +114,7 @@ export const LoginDialog = ({ setToken }: { setToken: (token: string) => void })
                 <span className="text-destructive text-center font-bold">{message}</span>
               </div>
             )}
-            <Button className="w-full" type="submit" disabled={loading}>
+            <Button className="w-full" type="submit" disabled={isPending}>
               Belépés
             </Button>
           </CardFooter>

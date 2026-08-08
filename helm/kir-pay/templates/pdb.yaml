@@ -1,0 +1,25 @@
+{{ if gt (int .Values.app.replicas) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Release.Name }}-backend
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+{{ end }}
+---
+{{ if .Values.frontend.enabled }}
+{{ if gt (int .Values.frontend.replicas) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Release.Name }}-frontend
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-frontend
+{{ end }}
+{{ end }}

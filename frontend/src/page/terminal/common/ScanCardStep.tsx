@@ -1,7 +1,9 @@
 import { Button } from '@/components/ui/button.tsx'
-import { useNFCScanner } from '@/lib/utils.ts'
+import { useNFCScanner } from '@/hooks/useNFCScanner.ts'
 import { RotatedForCustomer } from '@/components/RotatedForCustomer.tsx'
 import { useAppContext } from '@/hooks/useAppContext.ts'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert.tsx'
+import { CircleX } from 'lucide-react'
 
 export const ScanCardStep = ({
   setCard,
@@ -15,7 +17,7 @@ export const ScanCardStep = ({
   onAbort?: () => void
 }) => {
   const { currencySymbol } = useAppContext().config
-  useNFCScanner((event) => {
+  const { error } = useNFCScanner((event) => {
     setCard(event.serialNumber)
   }, [])
 
@@ -30,6 +32,13 @@ export const ScanCardStep = ({
             </h1>
           )}
         </RotatedForCustomer>
+        {error && (
+          <Alert className="w-auto">
+            <CircleX className="px-1" />
+            <AlertTitle>NFC hiba</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <h1 className="font-bold text-2xl pb-8 text-center">Érints kártyát az eszközhöz...</h1>
         {onAbort && (
           <Button variant="secondary" onClick={onAbort}>

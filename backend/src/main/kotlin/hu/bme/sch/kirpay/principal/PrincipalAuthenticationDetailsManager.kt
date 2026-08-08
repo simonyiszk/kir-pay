@@ -1,39 +1,37 @@
 package hu.bme.sch.kirpay.principal
 
-import org.springframework.context.ApplicationEventPublisher
+import hu.bme.sch.kirpay.event.EventService
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UsernameNotFoundException
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.provisioning.UserDetailsManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 
-
 @Service
 @Transactional
 class PrincipalAuthenticationDetailsManager(
   private val principalRepository: PrincipalRepository,
-  private val events: ApplicationEventPublisher,
-  private val clock: Clock
+  private val eventService: EventService,
+  private val clock: Clock,
+  private val passwordEncoder: PasswordEncoder
 ) : UserDetailsManager {
-
   override fun loadUserByUsername(username: String): UserDetails {
     val principal = principalRepository.findByName(username)
       ?: throw UsernameNotFoundException("Felhasználó '$username' nem található!")
 
-    events.publishEvent(PrincipalAuthenticatedEvent(principal, clock.millis()))
     return principal
   }
-
 
   override fun createUser(user: UserDetails) {
     val createdAt = clock.millis()
     val principal = Principal(
       id = null,
       name = requireNotNull(user.username) { "Username must not be null" },
-      secret = requireNotNull(user.password) { "Password must not be null" },
+      secret = passwordEncoder.encode(user.password!!)!!,
       active = user.isEnabled,
       role = Role.TERMINAL,
       canRedeemVouchers = false,
@@ -46,9 +44,8 @@ class PrincipalAuthenticationDetailsManager(
     ).copyWithAuthorities(user.authorities)
 
     principalRepository.save(principal)
-    events.publishEvent(PrincipalCreatedEvent(principal, getLoggedInPrincipal(), clock.millis()))
+    eventService.logPrincipalCreated(principal, getLoggedInPrincipal()?.toRef(), clock.millis())
   }
-
 
   override fun updateUser(user: UserDetails) {
     val principal = principalRepository.findByName(user.username)
@@ -56,23 +53,21 @@ class PrincipalAuthenticationDetailsManager(
 
     val newPrincipal = principal.copy(
       name = requireNotNull(user.username) { "Username must not be null" },
-      secret = requireNotNull(user.password) { "Password must not be null" },
+      secret = passwordEncoder.encode(user.password!!)!!,
       active = user.isEnabled
     ).copyWithAuthorities(user.authorities)
 
     principalRepository.save(newPrincipal)
-    events.publishEvent(PrincipalUpdatedEvent(principal, getLoggedInPrincipal(), clock.millis()))
+    eventService.logPrincipalUpdated(principal, getLoggedInPrincipal()?.toRef(), clock.millis())
   }
-
 
   override fun deleteUser(username: String) {
     val principal = principalRepository.findByName(username)
       ?: throw IllegalArgumentException("A felhasználót nem lehet törölni, mert nem létezik!")
 
     principalRepository.delete(principal)
-    events.publishEvent(PrincipalDeletedEvent(principal, getLoggedInPrincipal(), clock.millis()))
+    eventService.logPrincipalDeleted(principal, getLoggedInPrincipal()?.toRef(), clock.millis())
   }
-
 
   override fun changePassword(oldPassword: String?, newPassword: String?) {
     requireNotNull(newPassword) { "Kötelező jelszót megadni!" }
@@ -84,9 +79,8 @@ class PrincipalAuthenticationDetailsManager(
     val principal = principalRepository.findByName(username)
       ?: throw UsernameNotFoundException("Nem lehet módosítani a felhasználót, '${username}' nem található!")
 
-    principalRepository.save(principal.copy(secret = newPassword))
+    principalRepository.save(principal.copy(secret = passwordEncoder.encode(newPassword)!!))
   }
-
 
   override fun userExists(username: String): Boolean {
     return principalRepository.findByName(username) != null

@@ -11,14 +11,12 @@ import org.springframework.transaction.annotation.Transactional
 @ConfigurationProperties(prefix = "hu.bme.sch.kirpay")
 data class ImportedPrincipals(val principals: List<PrincipalDto>)
 
-
 @Configuration
 @Profile("!cds-training")
 class PrincipalImporter(
   private val principals: ImportedPrincipals,
   private val principalService: PrincipalService
 ) {
-
   @Bean
   @Transactional
   fun importPrincipals(): ApplicationRunner = ApplicationRunner {
@@ -26,7 +24,6 @@ class PrincipalImporter(
   }
 
 }
-
 
 data class PrincipalDto(
   val name: String,

@@ -9,7 +9,7 @@ export type CustomCartEntry = CustomItem & {
   quantity: number
 }
 
-export type CartEntry = {
+type CartEntry = {
   item: Item
   quantity: number
 }
@@ -24,63 +24,75 @@ export const EmptyCart: Cart = {
   items: []
 }
 
-export const findEntry = (cart: Cart, item: Item) => cart.items.find((existing) => existing.item.id === item.id)
+const findEntry = (cart: Cart, item: Item) => cart.items.find((existing) => existing.item.id === item.id)
 
 export const addItem = (cart: Cart, item: Item): Cart => {
-  const itemsCopy = [...cart.items]
   const existingItem = findEntry(cart, item)
   if (existingItem !== undefined) {
-    existingItem.quantity++
-  } else {
-    itemsCopy.push({ item, quantity: 1 })
-    itemsCopy.sort((a, b) => a.item.name.localeCompare(b.item.name))
+    return {
+      items: cart.items.map((entry) => (entry.item.id === item.id ? { ...entry, quantity: entry.quantity + 1 } : entry)),
+      customEntries: cart.customEntries
+    }
   }
-  return { customEntries: cart.customEntries, items: itemsCopy }
+  const newItems = [...cart.items, { item, quantity: 1 }]
+  newItems.sort((a, b) => a.item.name.localeCompare(b.item.name))
+  return { items: newItems, customEntries: cart.customEntries }
 }
 
 export const removeItem = (cart: Cart, item: Item): Cart => {
-  let itemsCopy = [...cart.items]
   const existingItem = findEntry(cart, item)
-  if (existingItem !== undefined) {
-    existingItem.quantity--
-    if (existingItem.quantity <= 0) {
-      itemsCopy = itemsCopy.filter((existing) => existing.item.id !== item.id)
-    }
-  } else {
+  if (existingItem === undefined) {
     return cart
   }
-  return { customEntries: cart.customEntries, items: itemsCopy }
+  if (existingItem.quantity <= 1) {
+    return {
+      items: cart.items.filter((entry) => entry.item.id !== item.id),
+      customEntries: cart.customEntries
+    }
+  }
+  return {
+    items: cart.items.map((entry) => (entry.item.id === item.id ? { ...entry, quantity: entry.quantity - 1 } : entry)),
+    customEntries: cart.customEntries
+  }
 }
 
 export const getItemQuantity = (cart: Cart, item: Item) => findEntry(cart, item)?.quantity ?? 0
 
-export const findCustomEntry = (cart: Cart, item: CustomItem) =>
+const findCustomEntry = (cart: Cart, item: CustomItem) =>
   cart.customEntries.find((entry) => entry.name === item.name && entry.price === item.price)
 
 export const addCustomItem = (cart: Cart, item: CustomItem): Cart => {
-  const itemsCopy = [...cart.customEntries]
   const existingItem = findCustomEntry(cart, item)
   if (existingItem !== undefined) {
-    existingItem.quantity++
-  } else {
-    itemsCopy.push({ ...item, quantity: 1 })
-    itemsCopy.sort((a, b) => a.name.localeCompare(b.name))
+    return {
+      customEntries: cart.customEntries.map((entry) =>
+        entry.name === item.name && entry.price === item.price ? { ...entry, quantity: entry.quantity + 1 } : entry
+      ),
+      items: cart.items
+    }
   }
-  return { customEntries: itemsCopy, items: cart.items }
+  const newCustomEntries = [...cart.customEntries, { ...item, quantity: 1 }]
+  newCustomEntries.sort((a, b) => a.name.localeCompare(b.name))
+  return { customEntries: newCustomEntries, items: cart.items }
 }
 
 export const removeCustomItem = (cart: Cart, item: CustomItem): Cart => {
-  let itemsCopy = [...cart.customEntries]
   const existingItem = findCustomEntry(cart, item)
-  if (existingItem !== undefined) {
-    existingItem.quantity--
-    if (existingItem.quantity <= 0) {
-      itemsCopy = itemsCopy.filter((existing) => existing.name !== item.name || existing.price !== item.price)
-    }
-  } else {
+  if (existingItem === undefined) {
     return cart
   }
-  return { customEntries: itemsCopy, items: cart.items }
+  if (existingItem.quantity <= 1) {
+    return {
+      customEntries: cart.customEntries.filter((entry) => entry.name !== item.name || entry.price !== item.price),
+      items: cart.items
+    }
+  }
+  return {
+    customEntries: cart.customEntries.map((entry) =>
+      entry.name === item.name && entry.price === item.price ? { ...entry, quantity: entry.quantity - 1 } : entry
+    ),
+    items: cart.items
+  }
 }
 
 export const getCustomItemQuantity = (cart: Cart, item: CustomItem) => findCustomEntry(cart, item)?.quantity ?? 0

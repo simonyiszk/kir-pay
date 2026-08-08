@@ -1,0 +1,54 @@
+name: kir-pay-e2e
+
+services:
+  kir-pay-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: kir-pay
+      POSTGRES_USER: kirpay
+      POSTGRES_PASSWORD: e2e-test-pw
+    networks:
+      - kir-pay-e2e-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kirpay -d kir-pay"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+
+  kir-pay-backend:
+    image: kir-pay-backend:e2e
+    environment:
+      SERVER_PORT: 8080
+      DATABASE_HOST: kir-pay-db
+      POSTGRES_DB: kir-pay
+      POSTGRES_USER: kirpay
+      POSTGRES_PASSWORD: e2e-test-pw
+      ADMINISTRATOR_USERNAME: admin
+      ADMINISTRATOR_PASSWORD: admin
+      FRONTEND_ADDRESS: http://localhost:3000
+      JAVA_TOOL_OPTIONS: ""
+    ports:
+      - "8001:8080"
+    networks:
+      - kir-pay-e2e-network
+    depends_on:
+      kir-pay-db:
+        condition: service_healthy
+
+  kir-pay-frontend:
+    image: kir-pay-frontend:e2e
+    environment:
+      VITE_BACKEND_URL: http://localhost:8001
+    ports:
+      - "3000:8080"
+    networks:
+      - kir-pay-e2e-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080 || exit 1"]
+      interval: 1s
+      timeout: 5s
+      retries: 20
+      start_period: 3s
+
+networks:
+  kir-pay-e2e-network:

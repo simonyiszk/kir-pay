@@ -18,6 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form.tsx'
 import { useState } from 'react'
 import { useAppContext } from '@/hooks/useAppContext.ts'
+import { safeGetLocalStorage } from '@/lib/utils.ts'
 
 const customItemSchema = z.object({
   name: z.string().min(1),
@@ -55,7 +56,10 @@ const CustomItemForm = ({ onSave }: { onSave: (item: CustomItem) => void }) => {
   const { currencySymbol } = useAppContext().config
   const form = useForm<CustomItemOutput>({
     resolver: zodResolver(customItemSchema) as Resolver<CustomItemOutput>,
-    defaultValues: { name: localStorage.getItem(NameKey) || '', price: 0 }
+    defaultValues: {
+      name: safeGetLocalStorage(NameKey, '') || '',
+      price: 0
+    }
   })
 
   return (
@@ -79,7 +83,9 @@ const CustomItemForm = ({ onSave }: { onSave: (item: CustomItem) => void }) => {
                 <FormLabel>Miez</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <X className="w-4 h-4 m-auto mr-3 absolute top-0 bottom-0 right-0" onClick={() => form.setValue('name', '')} />
+                    <button type="button" className="absolute top-0 bottom-0 right-0 m-auto mr-3" onClick={() => form.setValue('name', '')}>
+                      <X className="w-4 h-4" />
+                    </button>
                     <Input placeholder="Unicum-sör" {...field} />
                   </div>
                 </FormControl>

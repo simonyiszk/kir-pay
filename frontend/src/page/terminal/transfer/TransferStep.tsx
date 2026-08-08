@@ -1,5 +1,4 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils.ts'
 import { Button } from '@/components/ui/button.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
@@ -7,6 +6,7 @@ import { BalanceCheck } from '@/page/terminal/common/BalanceCheck.tsx'
 import CheckAnimation from '@/components/CheckAnimation.tsx'
 import { ResultType } from '@/lib/api/model.ts'
 import { transferFunds } from '@/lib/api/terminal.api.ts'
+import { useMutation } from '@tanstack/react-query'
 
 export const TransferStep = ({
   amount,
@@ -19,24 +19,29 @@ export const TransferStep = ({
   recipient: string
   onReset: () => void
 }) => {
-  const { token } = useAppContext()
   const [retries, setRetries] = useState(0)
   const [status, setStatus] = useState<ResultType>()
   const [error, setError] = useState<string>()
   const [message, setMessage] = useState<string>()
-  const [senderBalanceLoading, setSenderBalanceLoading] = useState(false)
-  const [recipientBalanceLoading, setRecipientBalanceLoading] = useState(false)
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  const submittedRef = useRef(false)
+
+  const { mutate } = useMutation({
+    mutationFn: () => transferFunds(sender, { recipientCard: recipient, amount, idempotencyKey: idempotencyKeyRef.current }),
+    onSuccess: (data) => {
+      setStatus(data.result)
+      if (data.result !== 'Ok') {
+        setMessage(data.error ?? 'Hiba történt!')
+      }
+    },
+    onError: () => setError('Az átruházás sikertelen!')
+  })
 
   useEffect(() => {
-    transferFunds(token, sender, { recipientCard: recipient, amount })
-      .then((data) => {
-        setStatus(data.result)
-        if (data.result !== 'Ok') {
-          setMessage(data.error)
-        }
-      })
-      .catch(() => setError('Az átruházás sikertelen!'))
-  }, [sender, recipient, amount, retries, token])
+    if (submittedRef.current) return
+    submittedRef.current = true
+    mutate()
+  }, [sender, recipient, amount, retries, mutate])
 
   if (error)
     return (
@@ -50,6 +55,7 @@ export const TransferStep = ({
           onClick={() => {
             setError(undefined)
             setStatus(undefined)
+            submittedRef.current = false
             setRetries(retries + 1)
           }}
         >
@@ -72,8 +78,8 @@ export const TransferStep = ({
       <h1 className={cn('font-bold text-2xl pb-2 text-center', status !== 'Ok' && 'text-destructive')}>
         {status !== 'Ok' ? message : 'Sikeres tranzakció!'}
       </h1>
-      <BalanceCheck showVouchers={false} card={sender} loading={senderBalanceLoading} setLoading={setSenderBalanceLoading} />
-      <BalanceCheck showVouchers={false} card={recipient} loading={recipientBalanceLoading} setLoading={setRecipientBalanceLoading} />
+      <BalanceCheck showVouchers={false} card={sender} />
+      <BalanceCheck showVouchers={false} card={recipient} />
       <Button variant="secondary" className="w-full" onClick={onReset}>
         Új tranzakció
       </Button>

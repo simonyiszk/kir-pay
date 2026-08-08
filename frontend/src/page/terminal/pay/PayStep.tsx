@@ -1,5 +1,4 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { BalanceCheck } from '@/page/terminal/common/BalanceCheck.tsx'
@@ -7,25 +6,32 @@ import { cn } from '@/lib/utils.ts'
 import CheckAnimation from '@/components/CheckAnimation.tsx'
 import { pay } from '@/lib/api/terminal.api.ts'
 import { ResultType } from '@/lib/api/model.ts'
+import { useMutation } from '@tanstack/react-query'
 
 export const PayStep = ({ onReset, card, amount }: { onReset: () => void; card: string; amount: number }) => {
-  const { token } = useAppContext()
   const [retries, setRetries] = useState(0)
   const [status, setStatus] = useState<ResultType>()
   const [error, setError] = useState<string>()
   const [message, setMessage] = useState<string>()
-  const [balanceCheckLoading, setBalanceCheckLoading] = useState(false)
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  const submittedRef = useRef(false)
+
+  const { mutate } = useMutation({
+    mutationFn: () => pay(card, { amount, idempotencyKey: idempotencyKeyRef.current }),
+    onSuccess: (data) => {
+      setStatus(data.result)
+      if (data.result !== 'Ok') {
+        setMessage(data.error ?? 'Hiba történt!')
+      }
+    },
+    onError: () => setError('A fizetés sikertelen!')
+  })
 
   useEffect(() => {
-    pay(token, card, { amount })
-      .then((data) => {
-        setStatus(data.result)
-        if (data.result !== 'Ok') {
-          setMessage(data.error)
-        }
-      })
-      .catch(() => setError('A fizetés sikertelen!'))
-  }, [card, amount, retries, token])
+    if (submittedRef.current) return
+    submittedRef.current = true
+    mutate()
+  }, [card, amount, retries, mutate])
 
   if (error)
     return (
@@ -39,6 +45,7 @@ export const PayStep = ({ onReset, card, amount }: { onReset: () => void; card: 
           onClick={() => {
             setError(undefined)
             setStatus(undefined)
+            submittedRef.current = false
             setRetries(retries + 1)
           }}
         >
@@ -61,7 +68,7 @@ export const PayStep = ({ onReset, card, amount }: { onReset: () => void; card: 
       <h1 className={cn('font-bold text-2xl pb-2 text-center', status !== 'Ok' && 'text-destructive')}>
         {status !== 'Ok' ? message : 'Sikeres tranzakció!'}
       </h1>
-      <BalanceCheck showVouchers={true} card={card} loading={balanceCheckLoading} setLoading={setBalanceCheckLoading} />
+      <BalanceCheck showVouchers={true} card={card} />
       <Button variant="secondary" className="w-full" onClick={onReset}>
         Új tranzakció
       </Button>

@@ -9,21 +9,25 @@ import { Event, ValidatedApiCall } from '@/lib/api/model.ts'
 export const EventList = ({
   events,
   page,
-  setPage
+  setPage,
+  pageSize = 25
 }: {
   page: number
   setPage: (page: number) => void
   events: UseQueryResult<ValidatedApiCall<Event[]>>
+  pageSize?: number
 }) => {
   if (!events.data) return null
   if (events.data.result !== 'Ok') return <span className="text-destructive text-center">Sikertelen betöltés</span>
 
   if (page === 0 && !events.data.data.length) return <h1 className="font-bold text-lg pb-4 text-center">Még nincs egyetlen esemény sem!</h1>
 
+  const reachedEnd = events.data.data.length < pageSize
+
   return (
     <div className="flex flex-col gap-2">
-      {<BackAndForwardPagination page={page} setPage={setPage} reachedEnd={events.data.data.length <= 0} />}
-      {events.data.data.length <= 0 && <span className="font-bold text-lg pt-6 pb-4 text-center">Nincs több esemény</span>}
+      {<BackAndForwardPagination page={page} setPage={setPage} reachedEnd={reachedEnd} />}
+      {reachedEnd && <span className="font-bold text-lg pt-6 pb-4 text-center">Nincs több esemény</span>}
       {events.data.data.map((event) => (
         <Card key={event.id} className="p-4 flex flex-row gap-4 items-center flex-wrap">
           <Badge variant="outline" style={{ borderColor: event.color }}>
@@ -36,7 +40,7 @@ export const EventList = ({
           <span>{event.message}</span>
         </Card>
       ))}
-      {events.data.data.length > 0 && <BackAndForwardPagination page={page} setPage={setPage} reachedEnd={events.data.data.length <= 0} />}
+      {events.data.data.length > 0 && <BackAndForwardPagination page={page} setPage={setPage} reachedEnd={reachedEnd} />}
     </div>
   )
 }

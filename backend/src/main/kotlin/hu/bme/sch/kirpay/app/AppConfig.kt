@@ -2,12 +2,9 @@ package hu.bme.sch.kirpay.app
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.modulith.ApplicationModule
 
-
-@ApplicationModule
 @EnableConfigurationProperties
-@ConfigurationProperties(prefix = "hu.bme.sch.kirpay.terminal")
+@ConfigurationProperties(prefix = "hu.bme.sch.kirpay.app")
 data class AppConfig(
   val currencySymbol: String,
   val showUploadTab: Boolean = true,

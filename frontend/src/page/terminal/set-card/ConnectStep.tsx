@@ -1,28 +1,34 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert.tsx'
 import { assignCard } from '@/lib/api/terminal.api.ts'
 import { Account } from '@/lib/api/model.ts'
+import { useMutation } from '@tanstack/react-query'
 
 export const ConnectStep = ({ onReset, card, account }: { onReset: () => void; card: string; account: Account }) => {
-  const { token } = useAppContext()
   const [retries, setRetries] = useState(0)
   const [error, setError] = useState<string>()
   const [pairingResult, setPairingResult] = useState<Account>()
+  const submittedRef = useRef(false)
+
+  const { mutate } = useMutation({
+    mutationFn: () => assignCard(account.id!, { card }),
+    onSuccess: (data) => {
+      if (data.result === 'Ok') {
+        setPairingResult(data.data)
+      } else {
+        setError(data.error ?? 'Hiba történt!')
+      }
+    },
+    onError: () => setError('Az összekapcsolás sikertelen!')
+  })
 
   useEffect(() => {
-    assignCard(token, account.id!, { card })
-      .then((data) => {
-        if (data.result === 'Ok') {
-          setPairingResult(data.data)
-        } else {
-          setError(data.error)
-        }
-      })
-      .catch(() => setError('Az összekapcsolás sikertelen!'))
-  }, [card, account.id, retries, token])
+    if (submittedRef.current) return
+    submittedRef.current = true
+    mutate()
+  }, [card, account.id, retries, mutate])
 
   if (error)
     return (
@@ -37,6 +43,7 @@ export const ConnectStep = ({ onReset, card, account }: { onReset: () => void; c
           onClick={() => {
             setError(undefined)
             setPairingResult(undefined)
+            submittedRef.current = false
             setRetries(retries + 1)
           }}
         >

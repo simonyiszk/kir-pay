@@ -11,16 +11,21 @@ const ItemsPage = lazy(() => import('@/page/terminal/items/ItemsPage.tsx'))
 const BalanceCheckPage = lazy(() => import('@/page/terminal/BalanceCheckPage.tsx'))
 const TokensPage = lazy(() => import('@/page/terminal/tokens/TokensPage.tsx'))
 
-const TabKey = 'selectedTab'
+const TabKey = 'terminalSelectedTab'
 
-const TabIcons: { [key: string]: ReactNode } = {
-  balance: <CircleHelp />,
-  assign: <Link />,
-  pay: <CircleDollarSign />,
-  upload: <ArrowUpFromLine />,
-  items: <ShoppingBasket />,
-  tokens: <TicketCheck />,
-  transfer: <ArrowLeftRight />
+const BALANCE_ICON = <CircleHelp />
+const ASSIGN_ICON = <Link />
+const PAY_ICON = <CircleDollarSign />
+const TRANSFER_ICON = <ArrowLeftRight />
+const UPLOAD_ICON = <ArrowUpFromLine />
+const ITEMS_ICON = <ShoppingBasket />
+const TOKENS_ICON = <TicketCheck />
+
+interface TabConfig {
+  key: string
+  icon: ReactNode
+  visible: boolean
+  component: ReactNode
 }
 
 export const TerminalRoot = () => {
@@ -29,33 +34,28 @@ export const TerminalRoot = () => {
 
   const { canAssignCards, canRedeemVouchers, canSellItems, canTransfer, canUpload } = principal
 
+  const tabConfigs: TabConfig[] = [
+    { key: 'balance', icon: BALANCE_ICON, visible: showBalanceTab, component: <BalanceCheckPage /> },
+    { key: 'assign', icon: ASSIGN_ICON, visible: showSetCardTab && canAssignCards, component: <SetCardPage /> },
+    { key: 'pay', icon: PAY_ICON, visible: showPayTab && canSellItems, component: <PayPage /> },
+    { key: 'transfer', icon: TRANSFER_ICON, visible: showTransferTab && canTransfer, component: <TransferPage /> },
+    { key: 'upload', icon: UPLOAD_ICON, visible: showUploadTab && canUpload, component: <UploadPage /> },
+    { key: 'items', icon: ITEMS_ICON, visible: showCartTab && canSellItems, component: <ItemsPage /> },
+    { key: 'tokens', icon: TOKENS_ICON, visible: showTokenTab && canRedeemVouchers, component: <TokensPage /> }
+  ]
+
+  const visibleTabs = tabConfigs.filter((t) => t.visible).map((t) => t.key)
+
+  const tabIcons: { [key: string]: ReactNode } = Object.fromEntries(tabConfigs.map((t) => [t.key, t.icon]))
+
   return (
     <AppLayout
       tabKey={TabKey}
       defaultTab="balance"
-      tabIcons={TabIcons}
-      tabTriggers={() => (
-        <>
-          {showBalanceTab && <AppTabTrigger key="balance" tab="balance" child={TabIcons['balance']} />}
-          {showSetCardTab && canAssignCards && <AppTabTrigger key="assign" tab="assign" child={TabIcons['assign']} />}
-          {showPayTab && canSellItems && <AppTabTrigger key="pay" tab="pay" child={TabIcons['pay']} />}
-          {showTransferTab && canTransfer && <AppTabTrigger key="transfer" tab="transfer" child={TabIcons['transfer']} />}
-          {showUploadTab && canUpload && <AppTabTrigger key="upload" tab="upload" child={TabIcons['upload']} />}
-          {showCartTab && canSellItems && <AppTabTrigger key="items" tab="items" child={TabIcons['items']} />}
-          {showTokenTab && canRedeemVouchers && <AppTabTrigger key="tokens" tab="tokens" child={TabIcons['tokens']} />}
-        </>
-      )}
-      tabs={() => (
-        <>
-          {showBalanceTab && <AppTab key="balance" tab="balance" child={<BalanceCheckPage />} />}
-          {showSetCardTab && canAssignCards && <AppTab key="assign" tab="assign" child={<SetCardPage />} />}
-          {showPayTab && canSellItems && <AppTab key="pay" tab="pay" child={<PayPage />} />}
-          {showTransferTab && canTransfer && <AppTab key="transfer" tab="transfer" child={<TransferPage />} />}
-          {showUploadTab && canUpload && <AppTab key="upload" tab="upload" child={<UploadPage />} />}
-          {showCartTab && canSellItems && <AppTab key="items" tab="items" child={<ItemsPage />} />}
-          {showTokenTab && canRedeemVouchers && <AppTab key="tokens" tab="tokens" child={<TokensPage />} />}
-        </>
-      )}
+      tabIcons={tabIcons}
+      visibleTabs={visibleTabs}
+      tabTriggers={() => <>{tabConfigs.map((t) => t.visible && <AppTabTrigger key={t.key} tab={t.key} child={t.icon} />)}</>}
+      tabs={() => <>{tabConfigs.map((t) => t.visible && <AppTab key={t.key} tab={t.key} child={t.component} />)}</>}
     />
   )
 }

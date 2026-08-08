@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping(ADMIN_API)
@@ -14,38 +15,55 @@ class ItemAdminController(
 ) {
   private val itemParser = parserFactory.getParserForType(Item::class)
 
-
   @GetMapping("/items")
   fun getItemsPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
     if (page == null && size == null)
       itemService.findAll()
-    else
-      itemService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
-
+    else {
+      val p = page ?: DEFAULT_PAGE
+      val s = size ?: DEFAULT_PAGE_SIZE
+      requireValidPagination(p, s)
+      itemService.findPaginated(p, s)
+    }
 
   @GetMapping("/items/{itemId}")
   fun getItemsPaginated(@PathVariable itemId: Int) = itemService.find(itemId)
 
-
   @PostMapping("/items/{itemId}/disable")
   fun disableItem(@PathVariable itemId: Int) = itemService.setEnabled(itemId, false)
-
 
   @PostMapping("/items/{itemId}/enable")
   fun enableItem(@PathVariable itemId: Int) = itemService.setEnabled(itemId, true)
 
+  data class ItemCreateDto(
+    val name: String,
+    val alias: String?,
+    val cost: Long,
+    val stock: Int,
+    val enabled: Boolean,
+    val showOnLeaderboard: Boolean = false,
+    val idempotencyKey: UUID
+  ) {
+    fun toItem() = Item(
+      id = null,
+      name = name,
+      alias = alias,
+      cost = java.math.BigInteger.valueOf(cost),
+      stock = stock,
+      enabled = enabled,
+      showOnLeaderboard = showOnLeaderboard,
+      version = 0
+    )
+  }
 
   @PostMapping("/items")
-  fun createItem(@RequestBody item: Item) = itemService.createItem(item)
+  fun createItem(@RequestBody dto: ItemCreateDto) = itemService.createItem(dto)
 
-
-  @PostMapping("/items/{itemId}")
+  @PutMapping("/items/{itemId}")
   fun updateItem(@PathVariable itemId: Int, @RequestBody item: Item) = itemService.updateItem(itemId, item)
-
 
   @DeleteMapping("/items/{itemId}")
   fun deleteItem(@PathVariable itemId: Int) = itemService.deleteItem(itemId)
-
 
   @GetMapping("/export/items", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
   fun exportItems(): ResponseEntity<String> {
@@ -55,14 +73,12 @@ class ItemAdminController(
       .body(itemParser.toCsv(orderLines))
   }
 
-
   @PostMapping("/import/items", consumes = [MediaType.TEXT_PLAIN_VALUE])
   @ResponseStatus(HttpStatus.CREATED)
-  fun importItems(@RequestBody csv: String) {
+  fun importItems(@RequestBody csv: String, @RequestParam idempotencyKey: UUID) {
     val items = itemParser.fromCsv(csv)
-    itemService.importItems(items)
+    itemService.importItems(items, idempotencyKey, csv)
   }
-
 
   @GetMapping("/template/items", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
   fun itemExportTemplate(): ResponseEntity<String> {

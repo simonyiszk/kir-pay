@@ -118,19 +118,21 @@ export const AccountForm = ({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="balance"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Egyenleg ({currencySymbol}) - Kötelező</FormLabel>
-                <FormControl>
-                  <Input placeholder="1234" type="number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!defaultAccount && (
+            <FormField
+              control={form.control}
+              name="balance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Egyenleg ({currencySymbol}) - Kötelező</FormLabel>
+                  <FormControl>
+                    <Input placeholder="1234" type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           <FormField
             control={form.control}
             name="active"

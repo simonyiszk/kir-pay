@@ -1,7 +1,11 @@
 #!/bin/sh
 set -e
 
-HTML=/usr/share/nginx/html/index.html
+ASSETS=/opt/app-assets
+ROOT=/usr/share/nginx/html
+HTML=$ROOT/index.html
+
+cp -a "$ASSETS"/. "$ROOT"/
 
 for var in $(env | grep '^VITE_' | cut -d= -f1); do
   placeholder="__${var}__"

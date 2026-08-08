@@ -2,17 +2,21 @@ import { Logo } from '@/components/Logo.tsx'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import { Menu } from 'lucide-react'
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useEnableRotatedForCustomer } from '@/hooks/useEnableRotatedForCustomer.ts'
 import { useTheme } from '@/hooks/useTheme.ts'
+import { logout } from '@/lib/api/common.api.ts'
 
 export const AppHeader = () => {
-  const { logOut } = useAppContext()
   const { rotateEnabled, setRotateEnabled } = useEnableRotatedForCustomer()
   const { theme, setTheme } = useTheme()
 
+  const handleLogout = async () => {
+    await logout()
+    window.location.reload()
+  }
+
   return (
-    <div className="flex flex-col w-full items-center mb-8 gap-4 sm:gap-8 m-auto relative">
+    <header className="flex flex-col w-full items-center mb-8 gap-4 sm:gap-8 m-auto relative">
       <Logo />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -27,9 +31,9 @@ export const AppHeader = () => {
           <DropdownMenuItem onClick={() => setRotateEnabled(!rotateEnabled)}>
             Tükrözés {rotateEnabled ? 'kikapcsolása' : 'bekapcsolása'}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={logOut}>Kijelentkezés</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout}>Kijelentkezés</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </header>
   )
 }

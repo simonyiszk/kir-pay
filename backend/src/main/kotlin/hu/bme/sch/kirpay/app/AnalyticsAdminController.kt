@@ -14,17 +14,16 @@ class AnalyticsAdminController(
   private val accountService: AccountService,
   private val transactionService: TransactionService
 ) {
-
   data class AnalyticsDto(
     val accountCount: Long,
     val transactionCount: Long,
-    val allActiveBalance: Long,
-    val income: Long,
-    val allUploads: Long,
-    val transactionVolume: Long,
+    val allActiveBalance: java.math.BigInteger,
+    val income: java.math.BigInteger,
+    val allUploads: java.math.BigInteger,
+    val transactionVolume: java.math.BigInteger,
   )
 
-  @Transactional
+  @Transactional(readOnly = true)
   @GetMapping("/analytics")
   fun getAnalytics() = AnalyticsDto(
     accountCount = accountService.countAll(),

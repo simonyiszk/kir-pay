@@ -1,16 +1,19 @@
 package hu.bme.sch.kirpay.event
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Table
-import org.springframework.modulith.ApplicationModule
+import jakarta.persistence.*
 
-
-@ApplicationModule
-@Table("events")
+@Entity
+@Table(name = "events")
 data class Event(
-  @Id var id: Int?,
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  var id: Int? = null,
+  @Column(nullable = false)
   val event: String,
+  @Column(nullable = false)
   val timestamp: Long,
+  @Column(nullable = false)
   val message: String,
+  @Column(nullable = false)
   val performedBy: String
 )

@@ -59,10 +59,9 @@ const ItemsTable = ({ items }: { items?: ValidatedApiCall<Item[]> }) => {
 }
 
 export const ItemsPage = () => {
-  const { token } = useAppContext()
   const items = useQuery({
-    queryKey: [AppQueryKeys.Items, token],
-    queryFn: () => findAllItems(token),
+    queryKey: [AppQueryKeys.Items],
+    queryFn: () => findAllItems(),
     refetchInterval: DataRefetchInterval,
     staleTime: DataRefetchInterval
   })

@@ -1,11 +1,10 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { ReactNode } from 'react'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { findAccountById } from '@/lib/api/terminal.api.ts'
 import { Account } from '@/lib/api/model.ts'
 
-export const AccountView = ({
+const AccountView = ({
   accountId,
   AccountView,
   loadingPlaceholder,
@@ -16,17 +15,15 @@ export const AccountView = ({
   loadingPlaceholder?: ReactNode
   errorPlaceholder?: ReactNode
 }) => {
-  const { token } = useAppContext()
-
   const canExecuteQuery = !(accountId === undefined || accountId === null)
   const accountQuery = useQuery({
     enabled: canExecuteQuery,
     queryFn: async () => {
-      const account = await findAccountById(token, accountId!)
+      const account = await findAccountById(accountId!)
       if (account.result !== 'Ok') throw Error(account.error)
       return account.data
     },
-    queryKey: [AppQueryKeys.Accounts, token, accountId],
+    queryKey: [AppQueryKeys.Accounts, accountId],
     placeholderData: keepPreviousData,
     staleTime: 30000
   })

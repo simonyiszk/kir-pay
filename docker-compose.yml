@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   kir-pay-db:
     image: postgres:17-alpine
@@ -11,6 +10,17 @@ services:
       - kir-pay-network
     ports:
       - "5432:5432"
+    # PostgreSQL SERIALIZABLE tuning
+    command: |
+      -c max_pred_locks_per_transaction=1024
+      -c max_pred_locks_per_page=256
+      -c random_page_cost=1.1
+      -c idle_in_transaction_session_timeout=300000
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
   kir-pay-backend:
     image: ghcr.io/simonyiszk/kir-pay:latest
     env_file:
@@ -24,7 +34,8 @@ services:
     networks:
       - kir-pay-network
     depends_on:
-      - kir-pay-db
+      kir-pay-db:
+        condition: service_healthy
   kir-pay-frontend:
     build:
       context: ./frontend
@@ -33,7 +44,14 @@ services:
       - .env
     restart: always
     ports:
-      - "3000:80"
+      - "3000:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080 || exit 1"]
+      interval: 1s
+      timeout: 5s
+      retries: 20
+      start_period: 3s
+
 networks:
   kir-pay-network:
 volumes:

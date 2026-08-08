@@ -73,10 +73,9 @@ const OrderLineList = ({
 
 export const OrderPage = () => {
   const [page, setPage] = useState(0)
-  const { token } = useAppContext()
   const orderLines = useQuery({
-    queryKey: [AppQueryKeys.OrderWithOrderLines, token, page],
-    queryFn: () => findAllOrdersWithOrderLines(token, page, 25),
+    queryKey: [AppQueryKeys.OrderWithOrderLines, page],
+    queryFn: () => findAllOrdersWithOrderLines(page, 25),
     refetchInterval: DataRefetchInterval,
     staleTime: DataRefetchInterval
   })

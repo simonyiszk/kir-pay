@@ -1,5 +1,4 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils.ts'
 import { Button } from '@/components/ui/button.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
@@ -7,6 +6,7 @@ import CheckAnimation from '@/components/CheckAnimation.tsx'
 import { Item, ResultType } from '@/lib/api/model.ts'
 import { checkout } from '@/lib/api/terminal.api.ts'
 import { BalanceCheck } from '@/page/terminal/common/BalanceCheck.tsx'
+import { useMutation } from '@tanstack/react-query'
 
 export const ClaimTokenStep = ({
   item,
@@ -19,23 +19,33 @@ export const ClaimTokenStep = ({
   onReset: () => void
   onBackToScan: () => void
 }) => {
-  const { token } = useAppContext()
   const [retries, setRetries] = useState(0)
   const [status, setStatus] = useState<ResultType>()
   const [message, setMessage] = useState<string>()
   const [error, setError] = useState<string>()
-  const [balanceCheckLoading, setBalanceCheckLoading] = useState(false)
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  const submittedRef = useRef(false)
+
+  const { mutate } = useMutation({
+    mutationFn: () =>
+      checkout(card, {
+        idempotencyKey: idempotencyKeyRef.current,
+        orderLines: [{ itemCount: 1, usedVoucher: true, itemId: item.id }]
+      }),
+    onSuccess: (data) => {
+      setStatus(data.result)
+      if (data.result !== 'Ok') {
+        setMessage(data.error ?? 'Hiba történt!')
+      }
+    },
+    onError: () => setError('A fizetés sikertelen!')
+  })
 
   useEffect(() => {
-    checkout(token, card, { orderLines: [{ itemCount: 1, usedVoucher: true, itemId: item.id }] })
-      .then((data) => {
-        setStatus(data.result)
-        if (data.result !== 'Ok') {
-          setMessage(data.error)
-        }
-      })
-      .catch(() => setError('A fizetés sikertelen!'))
-  }, [card, item, token, retries])
+    if (submittedRef.current) return
+    submittedRef.current = true
+    mutate()
+  }, [card, item, retries, mutate])
 
   if (error)
     return (
@@ -49,6 +59,7 @@ export const ClaimTokenStep = ({
           onClick={() => {
             setError(undefined)
             setStatus(undefined)
+            submittedRef.current = false
             setRetries(retries + 1)
           }}
         >
@@ -72,7 +83,7 @@ export const ClaimTokenStep = ({
       <h1 className={cn('font-bold text-2xl pb-2 text-center', status !== 'Ok' && 'text-destructive')}>
         {status !== 'Ok' ? message : 'Sikeres beolvasás!'}
       </h1>
-      <BalanceCheck showVouchers={true} card={card} loading={balanceCheckLoading} setLoading={setBalanceCheckLoading} />
+      <BalanceCheck showVouchers={true} card={card} />
       <Button className="w-full mt-2" onClick={onBackToScan}>
         Még egy ilyet
       </Button>

@@ -58,10 +58,9 @@ const AccountsTable = ({ accounts }: { accounts?: ValidatedApiCall<Account[]> })
 }
 
 export const AccountsPage = () => {
-  const { token } = useAppContext()
   const accounts = useQuery({
-    queryKey: [AppQueryKeys.Accounts, token],
-    queryFn: () => findAllAccounts(token),
+    queryKey: [AppQueryKeys.Accounts],
+    queryFn: () => findAllAccounts(),
     refetchInterval: DataRefetchInterval
   })
 

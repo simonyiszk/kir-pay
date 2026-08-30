@@ -6,9 +6,10 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ .Release.Name }}
 spec:
-  schedule: {{ .Values.postgresBackup.schedule }}
+  schedule: {{ .Values.postgresBackup.schedule | quote }}
   jobTemplate:
     spec:
+      backoffLimit: 2
       template:
         spec:
           containers:

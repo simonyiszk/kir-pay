@@ -16,14 +16,14 @@ class EventAdminController(
 ) {
   private val eventParser = parserFactory.getParserForType(Event::class)
 
-
   @GetMapping("/events")
-  fun getEventsPaginated(@RequestParam(required = false) page: Int?, @RequestParam(required = false) size: Int?) =
-    if (page == null && size == null)
-      eventService.findAll()
-    else
-      eventService.findPaginated(page ?: DEFAULT_PAGE, size ?: DEFAULT_PAGE_SIZE)
-
+  fun getEventsPaginated(
+    @RequestParam(defaultValue = "$DEFAULT_PAGE") page: Int,
+    @RequestParam(defaultValue = "$DEFAULT_PAGE_SIZE") size: Int
+  ): List<Event> {
+    requireValidPagination(page, size)
+    return eventService.findPaginated(page, size)
+  }
 
   @GetMapping("/export/events", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
   fun exportEvents(): ResponseEntity<String> {

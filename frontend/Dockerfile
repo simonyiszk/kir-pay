@@ -14,16 +14,17 @@ RUN npm run build
 
 FROM docker.io/nginx:stable-alpine AS production
 
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/dist /opt/app-assets
 
 RUN sed -i '/^user /d' /etc/nginx/nginx.conf && \
     touch /run/nginx.pid && \
-    chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /run
+    mkdir -p /usr/share/nginx/html && \
+    chown -R nginx:nginx /opt/app-assets /usr/share/nginx/html /var/cache/nginx /run
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]

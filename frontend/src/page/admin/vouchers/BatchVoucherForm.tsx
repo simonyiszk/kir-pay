@@ -14,8 +14,18 @@ const voucherSchema = z.object({
   accounts: z
     .string()
     .min(1)
-    .refine((text) => text.match(/[, 0-9]/), 'A bemenet azonosítók listája kell, hogy legyen'),
-  itemId: z.coerce.number().int(),
+    .refine(
+      (text) => {
+        const tokens = (text as string)
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
+        if (tokens.length === 0) return false
+        return tokens.every((t) => /^\d+$/.test(t))
+      },
+      { message: 'A bemenet legalább egy, vesszővel elválasztott érvényes azonosítót tartalmazzon!' }
+    ),
+  itemId: z.coerce.number().int().positive(),
   count: z.coerce.number().int().finite().gte(0)
 })
 
@@ -42,10 +52,10 @@ export const BatchVoucherForm = ({
           onVoucherSubmitted({
             ...data,
             accounts: data.accounts
-              .split(/[, ]/)
+              .split(',')
+              .map((t) => t.trim())
               .filter(Boolean)
               .map(Number)
-              .filter((num) => Number.isFinite(num))
           })
         )}
       >

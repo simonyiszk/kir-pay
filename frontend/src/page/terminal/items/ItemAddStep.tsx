@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button.tsx'
 import { Item } from '@/lib/api/model.ts'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { findAllItems } from '@/lib/api/terminal.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 
@@ -33,10 +32,9 @@ export const ItemAddStep = ({
   onCustomItemAdded: (item: CustomItem) => void
   onCustomItemRemoved: (item: CustomItem) => void
 }) => {
-  const { token } = useAppContext()
   const itemsQuery = useQuery({
-    queryKey: [AppQueryKeys.Items, token],
-    queryFn: () => findAllItems(token),
+    queryKey: [AppQueryKeys.Items],
+    queryFn: () => findAllItems(),
     placeholderData: keepPreviousData
   })
   const form = useForm<z.infer<typeof itemNameSchema>>({

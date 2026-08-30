@@ -198,11 +198,36 @@ You can leave the defaults for local development.
 Open a terminal in the `frontend` folder and pull the packages
 
 ```bash
-yarn
+npm install
 ```
 
 then start the frontend development server
 
 ```bash
-yarn start
+npm start
+```
+
+## Testing
+
+### Backend
+
+Tests are organized by module under `backend/src/test`.
+
+**Run all backend tests:**
+
+```bash
+cd backend
+./gradlew test
+```
+
+### Frontend (E2E)
+
+The frontend uses Playwright for end-to-end tests. Tests live under `frontend/e2e/specs/` and run against
+a full stack (PostgreSQL + backend + frontend) via Docker Compose.
+
+**Prerequisites:** A running backend at `http://localhost:8001`. The easiest way is to start
+the full stack with Docker Compose and the E2E credentials:
+
+```bash
+./run-e2e.sh # or ./run-e2e.sh --ui if you want to use the Playwright GUI
 ```

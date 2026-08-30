@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx'
 import { ReactNode, Suspense, useState } from 'react'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
-import { setPersistentState } from '@/lib/utils.ts'
+import { setPersistentState, safeGetLocalStorage } from '@/lib/utils.ts'
 import { AppHeader } from '@/components/AppHeader.tsx'
 
 export const AppTab = ({ child, tab }: { child: ReactNode; tab: string }) => (
@@ -16,20 +16,41 @@ export const AppTabTrigger = ({ child, tab }: { child: ReactNode; tab: string })
   </TabsTrigger>
 )
 
+const getValidTab = (tabKey: string, visibleTabs: string[], defaultTab: string): string => {
+  const stored = safeGetLocalStorage(tabKey)
+  if (stored && visibleTabs.includes(stored)) {
+    return stored
+  }
+
+  if (tabKey === 'terminalSelectedTab') {
+    const oldStored = safeGetLocalStorage('selectedTab')
+    if (oldStored !== null) {
+      localStorage.removeItem('selectedTab')
+      if (visibleTabs.includes(oldStored)) {
+        localStorage.setItem(tabKey, oldStored)
+        return oldStored
+      }
+    }
+  }
+  return defaultTab
+}
+
 export const AppLayout = ({
   tabs,
   tabTriggers,
   tabIcons,
   tabKey,
-  defaultTab
+  defaultTab,
+  visibleTabs
 }: {
   tabs: () => ReactNode
   tabTriggers: () => ReactNode
   tabIcons: { [key: string]: ReactNode }
   tabKey: string
   defaultTab: string
+  visibleTabs: string[]
 }) => {
-  const [currentTab, setCurrentTab] = useState(localStorage.getItem(tabKey) || defaultTab)
+  const [currentTab, setCurrentTab] = useState(() => getValidTab(tabKey, visibleTabs, defaultTab))
 
   const currentTabIcon = tabIcons[currentTab]
   return (

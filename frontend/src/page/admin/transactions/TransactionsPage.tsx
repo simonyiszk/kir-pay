@@ -111,10 +111,9 @@ const TransactionList = ({
 export const TransactionsPage = () => {
   const [page, setPage] = useState(0)
   const { toast } = useToast()
-  const { token } = useAppContext()
   const transactions = useQuery({
-    queryKey: [AppQueryKeys.Transactions, token, page],
-    queryFn: () => findAllTransactions(token, page, 25),
+    queryKey: [AppQueryKeys.Transactions, page],
+    queryFn: () => findAllTransactions(page, 25),
     refetchInterval: DataRefetchInterval,
     staleTime: DataRefetchInterval
   })
@@ -127,13 +126,13 @@ export const TransactionsPage = () => {
           variant="secondary"
           onClick={() =>
             exportToCsv('transactions.csv', () =>
-              exportTransactions(token).then((data) => {
+              exportTransactions().then((data) => {
                 if (data.result === 'Ok') return data.data
                 throw Error()
               })
             )
               .then(() => toast({ description: 'Tranzakciók exportálva' }))
-              .catch(() => toast({ description: 'Hiba az tranzakciók exportálása közben' }))
+              .catch(() => toast({ description: 'Hiba a tranzakciók exportálása közben' }))
           }
         >
           Exportálás

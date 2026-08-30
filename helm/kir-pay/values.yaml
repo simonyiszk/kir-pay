@@ -1,6 +1,7 @@
 frontend:
   enabled: true
-  image: ghcr.io/simonyiszk/kir-pay-frontend:latest
+  image: ghcr.io/simonyiszk/kir-pay-frontend
+  imageTag: ""
   host: kir.pay
   strategyType: RollingUpdate
   replicas: 1
@@ -9,8 +10,8 @@ frontend:
       cpu: "500m"
       memory: "512Mi"
     limits:
-      cpu:
-      memory:
+      cpu: "500m"
+      memory: "512Mi"
   ingress:
     enabled: true
     annotations:
@@ -19,7 +20,7 @@ frontend:
       nginx.ingress.kubernetes.io/proxy-body-size: 20m
   service:
     type: ClusterIP
-  imagePullPolicy: Always
+  imagePullPolicy: IfNotPresent
   startupProbe:
     failureThreshold: 60
     periodSeconds: 5
@@ -36,18 +37,20 @@ frontend:
 
 app:
   image: ghcr.io/simonyiszk/kir-pay
+  imageTag: ""
   administrator:
     username: admin
-    password: admin
+    password: ""
   host: api.kir.pay
+  # Defaults to https://<host>; override for non-ingress setups.
+  backendUrl: ""
   replicas: 1
   strategyType: RollingUpdate
   frontendUrl: https://kir.pay
   currencySymbol: JMF
-  imagePullPolicy: Always
+  imagePullPolicy: IfNotPresent
   ingress:
     enabled: true
-    blockActuatorEndpoints: true
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
       kubernetes.io/tls-acme: 'true'
@@ -59,8 +62,8 @@ app:
       cpu: "500m"
       memory: "512Mi"
     limits:
-      cpu:
-      memory:
+      cpu: "1000m"
+      memory: "1024Mi"
   startupProbe:
     failureThreshold: 60
     periodSeconds: 5
@@ -84,9 +87,9 @@ postgresBackup:
   restartPolicy: Never
   imagePullPolicy: Always
   image: harbor.sch.bme.hu/org-kir-dev/postgres-backup:latest
-  googleServiceAccount: 'service account json contents'
-  driveParentId: 'the ID of the drive folder for the files'
-  driveId: 'the ID of the shared drive'
+  googleServiceAccount: ''
+  driveParentId: ''
+  driveId: ''
 
 postgresql:
   enabled: true
@@ -98,7 +101,7 @@ postgresql:
       auth:
         database: kir-pay
         username: kirpay
-        password: password
+        password: ""
   architecture: standalone
   image:
     repository: bitnamilegacy/postgresql
@@ -130,3 +133,18 @@ postgresql:
     persistence:
       size: 2Gi
     resourcesPreset: "small"
+    # PostgreSQL SERIALIZABLE isolation tuning
+    # Based on https://www.postgresql.org/docs/current/transaction-iso.html
+    extendedConfiguration: |
+      max_pred_locks_per_transaction = 1024
+      max_pred_locks_per_page = 256
+      random_page_cost = 1.1
+      idle_in_transaction_session_timeout = 300000
+
+# External database configuration (used when postgresql.enabled is false)
+externalDatabase:
+  host: ""
+  port: 5432
+  database: kir-pay
+  username: kirpay
+  password: ""

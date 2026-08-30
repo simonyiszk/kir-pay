@@ -6,9 +6,11 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.Clock
 
+data class PrincipalRef(val id: Int?, val name: String)
+
+fun Principal.toRef() = PrincipalRef(id, name)
 
 fun getLoggedInPrincipal(): Principal? = (SecurityContextHolder.getContext().authentication?.principal as? Principal)
-
 
 fun Principal.copyWithAuthorities(authorities: Collection<GrantedAuthority>): Principal {
   val role = if (isRoleGranted(Role.ADMIN.name, authorities)) {
@@ -29,23 +31,21 @@ fun Principal.copyWithAuthorities(authorities: Collection<GrantedAuthority>): Pr
   )
 }
 
-
 fun getPrincipalAuthorities(principal: Principal): MutableCollection<out GrantedAuthority> = listOfNotNull(
   when (principal.role) {
     Role.TERMINAL -> Role.TERMINAL.name
     Role.ADMIN -> Role.ADMIN.name
   },
-  if (principal.canRedeemVouchers) Permission.REDEEM_VOUCHERS.name else null,
-  if (principal.canSellItems) Permission.SELL_ITEMS.name else null,
-  if (principal.canTransfer) Permission.TRANSFER_FUNDS.name else null,
-  if (principal.canUpload) Permission.UPLOAD_FUNDS.name else null,
-  if (principal.canAssignCards) Permission.ASSIGN_CARDS.name else null,
-).map { SimpleGrantedAuthority("ROLE_$it") }.toMutableList()
-
+  if (principal.role == Role.ADMIN || principal.canRedeemVouchers) Permission.REDEEM_VOUCHERS.name else null,
+  if (principal.role == Role.ADMIN || principal.canSellItems) Permission.SELL_ITEMS.name else null,
+  if (principal.role == Role.ADMIN || principal.canTransfer) Permission.TRANSFER_FUNDS.name else null,
+  if (principal.role == Role.ADMIN || principal.canUpload) Permission.UPLOAD_FUNDS.name else null,
+  if (principal.role == Role.ADMIN || principal.canAssignCards) Permission.ASSIGN_CARDS.name else null,
+).map { SimpleGrantedAuthority(if (it == Role.TERMINAL.name || it == Role.ADMIN.name) "ROLE_$it" else it) }
+  .toMutableList()
 
 private fun isRoleGranted(role: String, authorities: Collection<GrantedAuthority>) =
-  authorities.any { it.equals("ROLE_$role") }
-
+  authorities.any { it.authority == "ROLE_$role" || it.authority == role }
 
 fun PrincipalDto.toPrincipal(encoder: PasswordEncoder, clock: Clock): Principal {
   val createdAt = clock.millis()

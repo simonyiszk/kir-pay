@@ -1,4 +1,3 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useToast } from '@/components/ui/use-toast.ts'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu.tsx'
 import { Button } from '@/components/ui/button.tsx'
@@ -7,16 +6,31 @@ import { createAccount, exportAccounts, exportAccountTemplate, importAccounts } 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx'
 import { Label } from '@/components/ui/label.tsx'
 import { Input } from '@/components/ui/input.tsx'
-import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
+import { Account } from '@/lib/api/model.ts'
 import { AccountForm } from '@/page/admin/accounts/AccountForm.tsx'
 
 const CreateAccountDialog = ({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) => {
-  const { token } = useAppContext()
   const [error, setError] = useState<string>()
-  const [loading, setLoading] = useState(false)
   const queryClient = useQueryClient()
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  useEffect(() => {
+    if (open) idempotencyKeyRef.current = crypto.randomUUID()
+  }, [open])
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (account: Account) => createAccount({ ...account, idempotencyKey: idempotencyKeyRef.current }),
+    onSuccess: (data) => {
+      if (data.result === 'Ok') {
+        setOpen(false)
+        queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
+        return
+      }
+      setError(data.error || 'A felhasználó létrehozása sikertelen!')
+    }
+  })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -25,21 +39,10 @@ const CreateAccountDialog = ({ open, setOpen }: { open: boolean; setOpen: (open:
           <DialogTitle>Felhasználó létrehozása</DialogTitle>
           <AccountForm
             error={error}
-            loading={loading}
+            loading={isPending}
             onAccountSubmitted={(account) => {
               setError(undefined)
-              setLoading(true)
-              createAccount(token, account)
-                .then((data) => {
-                  if (data.result === 'Ok') {
-                    setOpen(false)
-                    queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
-                    return
-                  }
-
-                  setError(data.error || 'A felhasználó létrehozása sikertelen!')
-                })
-                .then(() => setLoading(false))
+              mutate(account)
             }}
           />
         </DialogHeader>
@@ -48,11 +51,28 @@ const CreateAccountDialog = ({ open, setOpen }: { open: boolean; setOpen: (open:
   )
 }
 
-export const ImportDialog = ({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) => {
+const ImportDialog = ({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) => {
   const queryClient = useQueryClient()
   const { toast } = useToast()
-  const { token } = useAppContext()
   const [file, setFile] = useState<File>()
+  const idempotencyKeyRef = useRef<string>(crypto.randomUUID())
+  useEffect(() => {
+    if (open) idempotencyKeyRef.current = crypto.randomUUID()
+  }, [open])
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (csv: string) => importAccounts(csv, idempotencyKeyRef.current),
+    onSuccess: (data) => {
+      if (data.result === 'Ok') {
+        toast({ description: 'Felhasználók importálása sikeres' })
+        setOpen(false)
+        queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
+      } else {
+        toast({ description: `Hiba a felhasználók importálása közben: ${data.error ?? 'ismeretlen hiba'}` })
+      }
+    },
+    onError: (e: Error) => toast({ description: `Hiba a felhasználók importálása közben: ${e?.message ?? 'ismeretlen hiba'}` })
+  })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -61,24 +81,22 @@ export const ImportDialog = ({ open, setOpen }: { open: boolean; setOpen: (open:
           <DialogTitle>Felhasználók importálása</DialogTitle>
         </DialogHeader>
         <Label htmlFor="csv">Felhasználókkat tartalmazó .csv file (tartalmazhat több oszlopot mint a template)</Label>
-        <Input id="csv" type="file" accept="text/csv" onChange={(e) => setFile(e.target?.files?.item(0) || undefined)} />
+        <Input
+          id="csv"
+          type="file"
+          accept="text/csv"
+          onChange={(e) => {
+            idempotencyKeyRef.current = crypto.randomUUID()
+            setFile(e.target?.files?.item(0) || undefined)
+          }}
+        />
         <DialogFooter>
           <Button
-            disabled={!file}
+            disabled={!file || isPending}
             onClick={async () => {
               if (!file) return
-              file
-                .text()
-                .then((csv) => importAccounts(token, csv))
-                .then((data) => {
-                  if (data.result === 'Ok') {
-                    toast({ description: 'Felhasználók importálása sikeres' })
-                    setOpen(false)
-                    queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
-                  } else {
-                    toast({ description: `Hiba a felhasználók importálása közben: ${data.error}` })
-                  }
-                })
+              const csv = await file.text()
+              mutate(csv)
             }}
             type="button"
           >
@@ -93,7 +111,6 @@ export const ImportDialog = ({ open, setOpen }: { open: boolean; setOpen: (open:
 export const AccountManagementDropdown = () => {
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const { token } = useAppContext()
   const { toast } = useToast()
 
   return (
@@ -107,7 +124,7 @@ export const AccountManagementDropdown = () => {
           <DropdownMenuItem
             onClick={() =>
               exportToCsv('accounts.csv', () =>
-                exportAccounts(token).then((data) => {
+                exportAccounts().then((data) => {
                   if (data.result === 'Ok') return data.data
                   throw Error()
                 })
@@ -121,7 +138,7 @@ export const AccountManagementDropdown = () => {
           <DropdownMenuItem
             onClick={() =>
               exportToCsv('accounts-template.csv', () =>
-                exportAccountTemplate(token).then((data) => {
+                exportAccountTemplate().then((data) => {
                   if (data.result === 'Ok') return data.data
                   throw Error()
                 })

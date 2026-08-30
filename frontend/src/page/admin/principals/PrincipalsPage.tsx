@@ -1,13 +1,13 @@
 import { Principal, PrincipalRole, ValidatedApiCall } from '@/lib/api/model.ts'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.tsx'
 import { Check, X } from 'lucide-react'
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useQuery } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { findAllPrincipals } from '@/lib/api/admin.api.ts'
 import { PrincipalManagementDropdown } from '@/page/admin/principals/PrincipalManagementDropdown.tsx'
 import { PrincipalActions } from '@/page/admin/principals/PrincipalActions.tsx'
+import { DataRefetchInterval } from '@/page/admin/common/constants.ts'
 
 const PrincipalsTable = ({ principals }: { principals?: ValidatedApiCall<Principal[]> }) => {
   if (!principals) return null
@@ -54,8 +54,12 @@ const PrincipalsTable = ({ principals }: { principals?: ValidatedApiCall<Princip
 }
 
 export const PrincipalsPage = () => {
-  const { token } = useAppContext()
-  const principals = useQuery({ queryKey: [AppQueryKeys.Principals, token], queryFn: () => findAllPrincipals(token) })
+  const principals = useQuery({
+    queryKey: [AppQueryKeys.Principals],
+    queryFn: () => findAllPrincipals(),
+    refetchInterval: DataRefetchInterval,
+    staleTime: DataRefetchInterval
+  })
 
   return (
     <div className="flex-1 h-full relative">

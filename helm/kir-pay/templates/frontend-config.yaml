@@ -6,5 +6,5 @@ metadata:
     app.kubernetes.io/name: {{ .Release.Name }}-frontend
   name: {{ .Release.Name }}-frontend-config
 data:
-  VITE_BACKEND_URL: "https://{{ .Values.app.host }}"
+  VITE_BACKEND_URL: "{{ if .Values.app.backendUrl }}{{ .Values.app.backendUrl }}{{ else }}https://{{ .Values.app.host }}{{ end }}"
 {{ end }}

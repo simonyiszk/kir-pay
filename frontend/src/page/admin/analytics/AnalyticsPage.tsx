@@ -1,4 +1,3 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useQueries } from '@tanstack/react-query'
 import { exportEvents, findAllEvents, getAnalytics, getConsumptionLeaderboard, getItemLeaderboard } from '@/lib/api/admin.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
@@ -15,30 +14,29 @@ import { ConsumptionLeaderboard, ItemLeaderboard } from '@/page/admin/analytics/
 export const AnalyticsPage = () => {
   const [page, setPage] = useState(0)
   const { toast } = useToast()
-  const { token } = useAppContext()
   const [analytics, events, consumptionLeaderboard, itemLeaderboard] = useQueries({
     queries: [
       {
-        queryKey: [AppQueryKeys.Analytics, token],
-        queryFn: () => getAnalytics(token),
+        queryKey: [AppQueryKeys.Analytics],
+        queryFn: () => getAnalytics(),
         refetchInterval: DataRefetchInterval,
         staleTime: DataRefetchInterval
       },
       {
-        queryKey: [AppQueryKeys.Events, token, page],
-        queryFn: () => findAllEvents(token, page, 25),
+        queryKey: [AppQueryKeys.Events, page],
+        queryFn: () => findAllEvents(page, 25),
         refetchInterval: DataRefetchInterval,
         staleTime: DataRefetchInterval
       },
       {
-        queryKey: [AppQueryKeys.ConsumptionLeaderboard, token],
-        queryFn: () => getConsumptionLeaderboard(token, 10),
+        queryKey: [AppQueryKeys.ConsumptionLeaderboard],
+        queryFn: () => getConsumptionLeaderboard(10),
         refetchInterval: DataRefetchInterval,
         staleTime: DataRefetchInterval
       },
       {
-        queryKey: [AppQueryKeys.ItemLeaderboard, token],
-        queryFn: () => getItemLeaderboard(token, 10),
+        queryKey: [AppQueryKeys.ItemLeaderboard],
+        queryFn: () => getItemLeaderboard(10),
         refetchInterval: DataRefetchInterval,
         staleTime: DataRefetchInterval
       }
@@ -65,7 +63,7 @@ export const AnalyticsPage = () => {
           variant="secondary"
           onClick={() =>
             exportToCsv('events.csv', () =>
-              exportEvents(token).then((data) => {
+              exportEvents().then((data) => {
                 if (data.result === 'Ok') return data.data
                 throw Error()
               })

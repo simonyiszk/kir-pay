@@ -1,4 +1,3 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useQuery } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
@@ -8,10 +7,9 @@ import { findAllAccounts } from '@/lib/api/terminal.api.ts'
 import { DataRefetchInterval } from '@/page/admin/common/constants.ts'
 
 export const AccountSelect = ({ onAccountSelected }: { onAccountSelected: (accountId: string) => void }) => {
-  const { token } = useAppContext()
   const accountsQuery = useQuery({
-    queryKey: [AppQueryKeys.Accounts, token],
-    queryFn: () => findAllAccounts(token),
+    queryKey: [AppQueryKeys.Accounts],
+    queryFn: () => findAllAccounts(),
     refetchInterval: DataRefetchInterval,
     staleTime: DataRefetchInterval
   })

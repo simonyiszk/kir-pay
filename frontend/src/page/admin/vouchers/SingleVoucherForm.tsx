@@ -11,8 +11,8 @@ import { AccountSelect } from '@/page/admin/common/AccountSelect.tsx'
 import { ItemSelect } from '@/page/admin/common/ItemSelect.tsx'
 
 const voucherSchema = z.object({
-  accountId: z.coerce.number().int(),
-  itemId: z.coerce.number().int(),
+  accountId: z.coerce.number().int().positive(),
+  itemId: z.coerce.number().int().positive(),
   count: z.coerce.number().int().finite().gte(0)
 })
 

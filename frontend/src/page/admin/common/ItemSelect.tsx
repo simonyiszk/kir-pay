@@ -1,4 +1,3 @@
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useQuery } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { findAllItems } from '@/lib/api/admin.api.ts'
@@ -8,10 +7,9 @@ import { FormControl } from '@/components/ui/form.tsx'
 import { DataRefetchInterval } from '@/page/admin/common/constants.ts'
 
 export const ItemSelect = ({ onItemSelected }: { onItemSelected: (itemId: string) => void }) => {
-  const { token } = useAppContext()
   const itemsQuery = useQuery({
-    queryKey: [AppQueryKeys.Items, token],
-    queryFn: () => findAllItems(token),
+    queryKey: [AppQueryKeys.Items],
+    queryFn: () => findAllItems(),
     refetchInterval: DataRefetchInterval,
     staleTime: DataRefetchInterval
   })

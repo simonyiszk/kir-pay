@@ -5,7 +5,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppContextProvider } from '@/components/AppContext.tsx'
 import { Toaster } from '@/components/ui/toaster.tsx'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false }
+  }
+})
 
 export const AppRoot: FC<PropsWithChildren> = ({ children }) => (
   <EnableRotatedForCustomerProvider>

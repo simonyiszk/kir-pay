@@ -8,7 +8,7 @@ metadata:
 spec:
   strategy:
     type: {{ .Values.frontend.strategyType }}
-  replicas: 1
+  replicas: {{ .Values.frontend.replicas }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}-frontend
@@ -20,15 +20,30 @@ spec:
     spec:
       containers:
         - name: {{ .Release.Name }}-frontend
-          image: {{ .Values.frontend.image }}
+          image: {{ .Values.frontend.image }}:{{ required "frontend.imageTag is required" .Values.frontend.imageTag }}
           imagePullPolicy: {{ .Values.frontend.imagePullPolicy }}
           envFrom:
             - configMapRef:
                 name: {{ .Release.Name }}-frontend-config
           securityContext:
+            runAsNonRoot: true
             runAsUser: 101
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: run
+              mountPath: /run
+            - name: cache
+              mountPath: /var/cache/nginx
+            - name: html
+              mountPath: /usr/share/nginx/html
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               protocol: TCP
           resources:
             {{ if or (.Values.frontend.resources.limits.cpu) (.Values.frontend.resources.limits.memory) }}
@@ -47,13 +62,13 @@ spec:
           startupProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             failureThreshold: {{ .Values.frontend.startupProbe.failureThreshold }}
             periodSeconds: {{ .Values.frontend.startupProbe.periodSeconds }}
           readinessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: {{ .Values.frontend.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.frontend.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.frontend.readinessProbe.timeoutSeconds }}
@@ -61,10 +76,18 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: {{ .Values.frontend.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.frontend.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.frontend.livenessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.frontend.livenessProbe.failureThreshold }}
+      volumes:
+        - name: run
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+        - name: html
+          emptyDir: {}
+      automountServiceAccountToken: false
       restartPolicy: Always
 {{ end }}

@@ -1,23 +1,27 @@
 package hu.bme.sch.kirpay.transaction
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
-import org.springframework.modulith.ApplicationModule
+import jakarta.persistence.*
+import java.math.BigInteger
 
-
-@ApplicationModule
-@Table("transactions")
+@Entity
+@Table(name = "transactions")
 data class Transaction(
-  @Id @Column() var id: Int?,
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  var id: Int? = null,
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
   val type: TransactionType,
   val senderId: Int?,
   val recipientId: Int?,
-  val amount: Long,
+  @Column(nullable = false, precision = 38)
+  val amount: BigInteger,
   val message: String?,
-  val timestamp: Long
+  @Column(nullable = false)
+  val timestamp: Long,
+  @Column(nullable = false, unique = true)
+  val fingerprint: String
 )
-
 
 enum class TransactionType {
   TOP_UP,

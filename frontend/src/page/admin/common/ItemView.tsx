@@ -1,5 +1,4 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { ReactNode } from 'react'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { findItemById } from '@/lib/api/admin.api.ts'
@@ -16,17 +15,15 @@ export const ItemView = ({
   loadingPlaceholder?: ReactNode
   errorPlaceholder?: ReactNode
 }) => {
-  const { token } = useAppContext()
-
   const canExecuteQuery = !(itemId === undefined || itemId === null)
   const itemQuery = useQuery({
     enabled: canExecuteQuery,
     queryFn: async () => {
-      const item = await findItemById(token, itemId!)
+      const item = await findItemById(itemId!)
       if (item.result !== 'Ok') throw Error(item.error)
       return item.data
     },
-    queryKey: [AppQueryKeys.Items, token, itemId],
+    queryKey: [AppQueryKeys.Items, itemId],
     placeholderData: keepPreviousData,
     staleTime: 30000
   })

@@ -1,8 +1,10 @@
 plugins {
-  kotlin("jvm") version "2.4.0"
-  kotlin("plugin.spring") version "2.4.0"
-  id("org.springframework.boot") version "4.1.0"
+  kotlin("jvm") version "2.4.10"
+  kotlin("plugin.spring") version "2.4.10"
+  kotlin("plugin.jpa") version "2.4.10"
+  id("org.springframework.boot") version "4.1.1"
   id("io.spring.dependency-management") version "1.1.7"
+  id("jacoco")
 }
 
 group = "hu.bme.sch"
@@ -25,33 +27,46 @@ repositories {
 }
 
 dependencies {
-  implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webmvc")
   implementation("org.springframework.boot:spring-boot-starter-validation")
-  implementation("org.springframework:spring-aspects")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv")
+  implementation("tools.jackson.module:jackson-module-kotlin")
+  implementation("tools.jackson.dataformat:jackson-dataformat-csv")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
-  implementation("org.springframework.modulith:spring-modulith-starter-core")
-  implementation("org.springframework.modulith:spring-modulith-starter-jdbc")
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   runtimeOnly("io.micrometer:micrometer-registry-prometheus")
   developmentOnly("org.springframework.boot:spring-boot-devtools")
-  runtimeOnly("org.postgresql:postgresql")
+  implementation("org.postgresql:postgresql")
+  implementation("org.springframework.boot:spring-boot-flyway")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql")
+  implementation("org.springframework.boot:spring-boot-starter-session-jdbc")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-}
 
-dependencyManagement {
-  imports {
-    mavenBom("org.springframework.modulith:spring-modulith-bom:2.1.0")
-  }
+  testImplementation("org.springframework.boot:spring-boot-starter-test")
+  testImplementation("org.springframework.boot:spring-boot-starter-security-test")
+  testImplementation("io.mockk:mockk:1.14.11")
+  testImplementation("org.testcontainers:testcontainers-postgresql:2.0.5")
+  testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
+  testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
 
 kotlin {
   compilerOptions {
     freeCompilerArgs.addAll("-Xjsr305=strict")
+  }
+}
+
+tasks.test {
+  useJUnitPlatform()
+  finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test)
+  reports {
+    xml.required = true
+    html.required = true
   }
 }
 

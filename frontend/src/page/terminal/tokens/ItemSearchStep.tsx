@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button.tsx'
 import { Toggle } from '@/components/ui/toggle.tsx'
 import { ColorMarker } from '@/components/ColorMarker.tsx'
 import { Item } from '@/lib/api/model.ts'
-import { useAppContext } from '@/hooks/useAppContext.ts'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { findAllItems } from '@/lib/api/terminal.api.ts'
@@ -18,10 +17,9 @@ import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 const itemNameSchema = z.object({ name: z.string().optional() })
 
 export const ItemSearchStep = ({ setItem }: { setItem: (item: Item) => void }) => {
-  const { token } = useAppContext()
   const itemsQuery = useQuery({
-    queryKey: [AppQueryKeys.Items, token],
-    queryFn: () => findAllItems(token),
+    queryKey: [AppQueryKeys.Items],
+    queryFn: () => findAllItems(),
     placeholderData: keepPreviousData
   })
   const form = useForm<z.infer<typeof itemNameSchema>>({

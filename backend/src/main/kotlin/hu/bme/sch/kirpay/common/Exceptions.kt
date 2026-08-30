@@ -3,26 +3,15 @@ package hu.bme.sch.kirpay.common
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 
-
-class NotFoundException(reason: String?) : ResponseStatusException(HttpStatus.NOT_FOUND, reason) {
+abstract class KirPayException(statusCode: HttpStatus, reason: String?) : ResponseStatusException(statusCode, reason) {
   override val message: String
     get() = reason ?: statusCode.toString()
 }
 
+class NotFoundException(reason: String?) : KirPayException(HttpStatus.NOT_FOUND, reason)
 
-class BadRequestException(reason: String?) : ResponseStatusException(HttpStatus.BAD_REQUEST, reason) {
-  override val message: String
-    get() = reason ?: statusCode.toString()
-}
+class BadRequestException(reason: String?) : KirPayException(HttpStatus.BAD_REQUEST, reason)
 
+class InternalErrorException(reason: String?) : KirPayException(HttpStatus.INTERNAL_SERVER_ERROR, reason)
 
-class ForbiddenException(reason: String?) : ResponseStatusException(HttpStatus.FORBIDDEN, reason) {
-  override val message: String
-    get() = reason ?: statusCode.toString()
-}
-
-
-class InternalErrorException(reason: String?) : ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, reason) {
-  override val message: String
-    get() = reason ?: statusCode.toString()
-}
+class UnprocessableEntityException(reason: String?) : KirPayException(HttpStatus.UNPROCESSABLE_CONTENT, reason)

@@ -1,37 +1,29 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { DependencyList, useEffect, useRef } from 'react'
 import { filter } from 'fuzzy'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const safeGetLocalStorage = (key: string, fallback: string | null = null): string | null => {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return fallback
+  }
+}
+
 export const setPersistentState =
   <T>(key: string, stateSetter: (state: T) => void) =>
   (value: T) => {
-    localStorage.setItem(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
+    if (value === null || value === undefined) {
+      localStorage.removeItem(key)
+    } else {
+      localStorage.setItem(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
+    }
     stateSetter(value)
   }
-
-export const useNFCScanner = (onScan: (event: NDEFReadingEvent) => void, deps: DependencyList) => {
-  const onScanRef = useRef(onScan)
-  useEffect(() => {
-    onScanRef.current = onScan
-  }, [onScan])
-
-  useEffect(() => {
-    const abortController = new AbortController()
-    const ndef = new NDEFReader()
-    const callback = ((e: NDEFReadingEvent) => onScanRef.current?.(e)) as EventListenerOrEventListenerObject
-    ndef
-      .scan({ signal: abortController.signal })
-      .then(() => ndef.addEventListener('reading', callback, { signal: abortController.signal, once: true }))
-
-    return () => abortController.abort()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
-}
 
 const murmurHash = (x: number): number => {
   x ^= x >> 17
@@ -49,7 +41,6 @@ export const getHashedColor = (text: string): string => {
   if (text.length === 0) return '#000000'
   for (let i = 0; i < text.length; i++) {
     hash = text.charCodeAt(i) + ((hash << 5) - hash)
-    hash = hash & hash
   }
   hash = murmurHash(hash)
   let color = '#'
@@ -70,8 +61,9 @@ export const fuzzySearch = <T>({ needle, haystack, getText }: { needle: string; 
 
 export const exportToCsv = async (fileName: string, csvSource: () => Promise<string>) => {
   const csv = await csvSource()
+  const bom = '﻿'
   const element = document.createElement('a')
-  element.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+  element.href = URL.createObjectURL(new Blob([bom + csv], { type: 'text/csv;charset=utf-8' }))
   element.download = fileName
   try {
     document.body.appendChild(element)

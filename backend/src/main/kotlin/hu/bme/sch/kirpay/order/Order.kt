@@ -1,30 +1,39 @@
 package hu.bme.sch.kirpay.order
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Table
-import org.springframework.modulith.ApplicationModule
+import jakarta.persistence.*
+import java.math.BigDecimal
+import java.math.BigInteger
 
-
-@ApplicationModule
-@Table("orders")
+@Entity
+@Table(name = "orders")
 data class Order(
-  @Id var id: Int?,
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  var id: Int? = null,
+  @Column(name = "account_id", nullable = false)
   val accountId: Int,
-  val timestamp: Long
+  @Column(nullable = false)
+  val timestamp: Long,
+  val idempotencyKey: String? = null,
+  val requestFingerprint: String? = null
 )
 
-
-@Table("order_lines")
+@Entity
+@Table(name = "order_lines")
 data class OrderLine(
-  @Id var id: Int?,
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  var id: Int? = null,
   val orderId: Int?,
   val itemId: Int?,
+  @Column(nullable = false)
   val itemCount: Int,
   val message: String?,
+  @Column(nullable = false)
   val usedVoucher: Boolean,
-  val paidAmount: Long
+  @Column(nullable = false, precision = 38)
+  val paidAmount: BigInteger
 )
-
 
 data class OrderWithOrderLine(
   val orderId: Int,
@@ -35,30 +44,44 @@ data class OrderWithOrderLine(
   val itemCount: Int,
   val message: String?,
   val usedVoucher: Boolean,
-  val paidAmount: Long
+  val paidAmount: BigDecimal
 )
 
-
-@Table("items")
+@Entity
+@Table(name = "items")
 data class Item(
-  @Id var id: Int?,
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  var id: Int? = null,
+  @Column(nullable = false)
   val name: String,
   val alias: String?,
-  val cost: Long,
+  @Column(nullable = false, precision = 38)
+  val cost: BigInteger,
+  @Column(nullable = false)
   val stock: Int,
+  @Column(nullable = false)
   val enabled: Boolean,
-  val showOnLeaderboard: Boolean = false
+  @Column(nullable = false)
+  val showOnLeaderboard: Boolean = false,
+  @Version
+  val version: Int = 0
 )
 
-
-@Table("vouchers")
+@Entity
+@Table(name = "vouchers")
 data class Voucher(
-  @Id var id: Int?,
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  var id: Int? = null,
   val accountId: Int?,
+  @Column(nullable = false)
   val itemId: Int,
-  val count: Int
+  @Column(nullable = false)
+  val count: Int,
+  @Version
+  val version: Int = 0
 )
-
 
 data class VoucherWithItemName(
   val voucherId: Int,
@@ -68,13 +91,11 @@ data class VoucherWithItemName(
   val count: Int
 )
 
-
 data class ItemConsumptionLeaderboardEntry(
   val itemId: Int,
   val itemName: String,
   val itemCount: Long
 )
-
 
 data class ConsumptionLeaderboardEntry(
   val accountId: Int,

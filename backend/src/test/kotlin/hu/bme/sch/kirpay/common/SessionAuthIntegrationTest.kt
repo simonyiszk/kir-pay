@@ -56,6 +56,18 @@ class SessionAuthIntegrationTest {
         .with(httpBasic("admin", "admin"))
     )
       .andExpect(status().isUnauthorized)
+      .andExpect(cookie().doesNotExist("SESSION"))
+  }
+
+  @Test
+  fun `actuator health endpoints do not create sessions`() {
+    mockMvc.perform(get("/actuator/health/liveness"))
+      .andExpect(status().isOk)
+      .andExpect(cookie().doesNotExist("SESSION"))
+
+    mockMvc.perform(get("/actuator/health/readiness"))
+      .andExpect(status().isOk)
+      .andExpect(cookie().doesNotExist("SESSION"))
   }
 
   @Test

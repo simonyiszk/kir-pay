@@ -37,6 +37,7 @@ class WebSecurityConfig {
     }
       .cors(Customizer.withDefaults())
       .csrf { it.disable() }
+      .requestCache { it.disable() }
       .securityContext { it.requireExplicitSave(true) }
       .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) }
       .exceptionHandling { it.authenticationEntryPoint(HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)) }

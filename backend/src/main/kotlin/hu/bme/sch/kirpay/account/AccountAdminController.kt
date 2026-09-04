@@ -18,6 +18,12 @@ class AccountAdminController(
 ) {
   private val accountParser = parserFactory.getParserForType(Account::class)
 
+  @GetMapping("/accounts")
+  fun getAllAccounts() = accountService.findAll()
+
+  @GetMapping("/accounts/{accountId}")
+  fun getAccount(@PathVariable accountId: Int) = accountService.find(accountId)
+
   @PostMapping("/accounts/{accountId}/disable")
   fun disableAccount(@PathVariable accountId: Int) = accountService.setEnabled(accountId, false)
 

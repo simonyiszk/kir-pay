@@ -76,9 +76,28 @@ test.describe.serial('Admin - Accounts API', () => {
     expect(body.active).toBe(false)
   })
 
+  test('GET /accounts includes disabled account while terminal list excludes it', async ({ authToken }) => {
+    const { status, body } = await api.get<Array<{ id: number; active: boolean }>>('/accounts')
+    expect(status).toBe(200)
+    const found = body.find((a) => a.id === createdAccountId)
+    expect(found?.active).toBe(false)
+
+    const terminalApi = apiClient('/v1/api/terminal', authToken)
+    const terminal = await terminalApi.get<Array<{ id: number }>>('/accounts')
+    expect(terminal.status).toBe(200)
+    expect(terminal.body.some((a) => a.id === createdAccountId)).toBe(false)
+  })
+
   test('POST /accounts/{id}/enable sets active=true (200)', async () => {
     const { status, body } = await api.post(`/accounts/${createdAccountId}/enable`)
     expect(status).toBe(200)
+    expect(body.active).toBe(true)
+  })
+
+  test('GET /accounts/{id} returns re-enabled account', async () => {
+    const { status, body } = await api.get<{ id: number; active: boolean }>(`/accounts/${createdAccountId}`)
+    expect(status).toBe(200)
+    expect(body.id).toBe(createdAccountId)
     expect(body.active).toBe(true)
   })
 
@@ -120,8 +139,8 @@ test.describe.serial('Admin - Accounts API', () => {
   })
 
   test('POST /import/accounts import + verify data (201)', async () => {
-    const csv = 'name,email,phone,card,balance,active\nImport Verified,,,CARD-IMPORT-VERIFY,750,true'
+    const csv = `name,email,phone,card,balance,active\nImport Verified,,,CARD-IMPORT-${Date.now().toString(36)},750,true`
     const resp = await api.postText('/import/accounts', csv, { idempotencyKey: randomUUID() })
-    expect([201, 400]).toContain(resp.status)
+    expect(resp.status).toBe(201)
   })
 })

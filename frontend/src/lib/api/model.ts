@@ -69,6 +69,12 @@ export type AnalyticsDto = {
   transactionVolume: number
 }
 
+export type RevenueHeatmapEntry = {
+  date: string // YYYY-MM-DD
+  hour: number // 0..23
+  revenue: number
+}
+
 export type Item = {
   id?: number
   name: string

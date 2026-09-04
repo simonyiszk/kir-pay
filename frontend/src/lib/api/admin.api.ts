@@ -13,6 +13,7 @@ import {
   Principal,
   PrincipalCreateDto,
   PrincipalDto,
+  RevenueHeatmapEntry,
   SessionInfo,
   Transaction,
   Voucher,
@@ -30,6 +31,8 @@ const getUrl = (endpoint: string, params?: object) => {
 }
 
 export const getAnalytics = () => httpGet<AnalyticsDto>({ url: getUrl('analytics') })
+
+export const getRevenueHeatmap = () => httpGet<RevenueHeatmapEntry[]>({ url: getUrl('analytics/revenue-heatmap') })
 
 export const findAllPrincipals = () => httpGet<Principal[]>({ url: getUrl('principals') })
 

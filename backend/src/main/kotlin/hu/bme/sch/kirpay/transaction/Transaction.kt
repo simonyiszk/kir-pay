@@ -1,6 +1,7 @@
 package hu.bme.sch.kirpay.transaction
 
 import jakarta.persistence.*
+import java.math.BigDecimal
 import java.math.BigInteger
 
 @Entity
@@ -28,3 +29,9 @@ enum class TransactionType {
   TRANSFER,
   CHARGE
 }
+
+data class RevenueHeatmapEntry(
+  val date: String, // YYYY-MM-DD
+  val hour: Int,    // 0..23
+  val revenue: BigDecimal
+)

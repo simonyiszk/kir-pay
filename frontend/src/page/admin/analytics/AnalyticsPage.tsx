@@ -1,20 +1,28 @@
 import { useQueries } from '@tanstack/react-query'
-import { exportEvents, findAllEvents, getAnalytics, getConsumptionLeaderboard, getItemLeaderboard } from '@/lib/api/admin.api.ts'
+import {
+  exportEvents,
+  findAllEvents,
+  getAnalytics,
+  getConsumptionLeaderboard,
+  getItemLeaderboard,
+  getRevenueHeatmap
+} from '@/lib/api/admin.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { exportToCsv } from '@/lib/utils.ts'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button.tsx'
 import { useToast } from '@/components/ui/use-toast.ts'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
-import { DataRefetchInterval } from '@/page/admin/common/constants.ts'
+import { DataRefetchInterval, HeatmapRefetchInterval } from '@/page/admin/common/constants.ts'
 import { EventList } from '@/page/admin/analytics/EventList.tsx'
 import { OverviewSection } from '@/page/admin/analytics/OverviewSection.tsx'
 import { ConsumptionLeaderboard, ItemLeaderboard } from '@/page/admin/analytics/Leaderboard.tsx'
+import { RevenueCharts } from '@/page/admin/analytics/RevenueCharts.tsx'
 
 export const AnalyticsPage = () => {
   const [page, setPage] = useState(0)
   const { toast } = useToast()
-  const [analytics, events, consumptionLeaderboard, itemLeaderboard] = useQueries({
+  const [analytics, events, consumptionLeaderboard, itemLeaderboard, revenueHeatmap] = useQueries({
     queries: [
       {
         queryKey: [AppQueryKeys.Analytics],
@@ -39,6 +47,18 @@ export const AnalyticsPage = () => {
         queryFn: () => getItemLeaderboard(10),
         refetchInterval: DataRefetchInterval,
         staleTime: DataRefetchInterval
+      },
+      {
+        queryKey: [AppQueryKeys.RevenueHeatmap],
+        queryFn: async () => {
+          const result = await getRevenueHeatmap()
+          if (result.result !== 'Ok') {
+            throw new Error(result.error ?? 'Sikertelen betöltés')
+          }
+          return result
+        },
+        refetchInterval: HeatmapRefetchInterval,
+        staleTime: HeatmapRefetchInterval
       }
     ]
   })
@@ -52,6 +72,8 @@ export const AnalyticsPage = () => {
           <LoadingIndicator />
         </div>
       )}
+
+      <RevenueCharts query={revenueHeatmap} />
 
       <ItemLeaderboard leaderboard={itemLeaderboard} />
 

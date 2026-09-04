@@ -5,10 +5,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigInteger
+import java.time.Clock
+import java.time.LocalDate
 
 @Service
 @Transactional
-class TransactionService(private val transactionRepository: TransactionRepository) {
+class TransactionService(
+  private val transactionRepository: TransactionRepository,
+  private val clock: Clock
+) {
   private val logger = LoggerFactory.getLogger(TransactionService::class.java)
 
   fun findAll() = transactionRepository.findAllOrderByTimestampDesc()
@@ -23,6 +28,14 @@ class TransactionService(private val transactionRepository: TransactionRepositor
   fun getTransactionVolume(): BigInteger = transactionRepository.getTransactionVolume()
 
   fun getAllUploads(): BigInteger = transactionRepository.getAllUploads()
+
+  @Transactional(readOnly = true)
+  fun revenueHeatmap(): List<RevenueHeatmapEntry> {
+    val days = 7
+    val windowStartMs = LocalDate.now(clock).minusDays((days - 1).toLong())
+      .atStartOfDay(clock.zone).toInstant().toEpochMilli()
+    return transactionRepository.findRevenueHeatmap(windowStartMs, days, clock.zone.id)
+  }
 
   fun recordPay(accountId: Int, amount: Long, timestamp: Long) {
     assert(amount > 0) { "recordPay amount must be positive, got $amount" }

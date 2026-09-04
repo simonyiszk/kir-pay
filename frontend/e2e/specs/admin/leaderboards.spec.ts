@@ -80,25 +80,24 @@ test.describe.serial('Admin - Leaderboards with Data', () => {
   })
 
   test('GET /consumption-leaderboard shows data after checkout', async () => {
-    const { status, body } = await adminApi.get('/consumption-leaderboard', { limit: 10 })
+    const { status, body } = await adminApi.get<Array<{ name?: string; itemCount?: number }>>('/consumption-leaderboard', { limit: 10 })
     expect(status).toBe(200)
     expect(Array.isArray(body)).toBe(true)
-
-    if (body.length > 0) {
-      const entry = body[0]
-      expect(typeof entry.itemCount).toBe('number')
-      expect(typeof entry.itemName).toBe('string')
-    }
+    const entry = body.find((e) => e.name === 'Leaderboard Test User')
+    expect(entry).toBeDefined()
+    expect(typeof entry!.itemCount).toBe('number')
   })
 
   test('GET /item-leaderboard shows data after checkout', async () => {
-    const { status, body } = await adminApi.get('/item-leaderboard', { limit: 10 })
+    const { status, body } = await adminApi.get<Array<{ itemId?: number; itemName?: string; itemCount?: number }>>('/item-leaderboard', {
+      limit: 10
+    })
     expect(status).toBe(200)
     expect(Array.isArray(body)).toBe(true)
-    if (body.length > 0) {
-      const entry = body[0]
-      expect(typeof entry.count).toBe('number')
-      expect(typeof entry.itemName).toBe('string')
-    }
+    const entry = body.find((e) => e.itemName === 'Leaderboard Item')
+    expect(entry).toBeDefined()
+    expect(typeof entry!.itemId).toBe('number')
+    expect(typeof entry!.itemName).toBe('string')
+    expect(entry!.itemCount).toBe(3)
   })
 })

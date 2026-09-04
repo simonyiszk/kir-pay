@@ -120,7 +120,7 @@ interface OrderLineRepository : JpaRepository<OrderLine, Int> {
   fun findAllOrderByOrderIdDescPaginated(skip: Long, take: Int): List<OrderLine>
 
   @Query(value = """
-    select sum(o.item_count) as item_count, i.id as item_id, i.name as item_name
+    select i.id as item_id, i.name as item_name, sum(o.item_count) as item_count
     from items i
              inner join order_lines o on i.id = o.item_id
     where i.enabled = true

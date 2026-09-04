@@ -7,6 +7,7 @@ axios.defaults.withCredentials = true
 
 export const AppQueryKeys = {
   Accounts: 'Accounts',
+  AdminAccounts: 'AdminAccounts',
   Analytics: 'Analytics',
   App: 'App',
   ConsumptionLeaderboard: 'ConsumptionLeaderboard',

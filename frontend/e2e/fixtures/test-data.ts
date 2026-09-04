@@ -188,6 +188,7 @@ export async function createItem(
     cost: number
     stock: number
     enabled: boolean
+    showOnLeaderboard: boolean
   }> = {}
 ): Promise<E2EItem> {
   const body = {
@@ -196,6 +197,7 @@ export async function createItem(
     cost: overrides.cost ?? 500,
     stock: overrides.stock ?? 100,
     enabled: overrides.enabled ?? true,
+    showOnLeaderboard: overrides.showOnLeaderboard ?? false,
     idempotencyKey: randomUUID()
   }
   const { body: item } = await adminClient().post<E2EItem>('/items', body)

@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
-import { findAccountById } from '@/lib/api/terminal.api.ts'
+import { findAccountById } from '@/lib/api/admin.api.ts'
 import { Account } from '@/lib/api/model.ts'
 
 const AccountView = ({
@@ -23,7 +23,7 @@ const AccountView = ({
       if (account.result !== 'Ok') throw Error(account.error)
       return account.data
     },
-    queryKey: [AppQueryKeys.Accounts, accountId],
+    queryKey: [AppQueryKeys.AdminAccounts, accountId],
     placeholderData: keepPreviousData,
     staleTime: 30000
   })

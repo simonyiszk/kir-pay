@@ -1,7 +1,7 @@
 import { Account, ValidatedApiCall } from '@/lib/api/model.ts'
 import { useAppContext } from '@/hooks/useAppContext.ts'
 import { useQuery } from '@tanstack/react-query'
-import { findAllAccounts } from '@/lib/api/terminal.api.ts'
+import { findAllAccounts } from '@/lib/api/admin.api.ts'
 import { AccountManagementDropdown } from '@/page/admin/accounts/AccountManagementDropdown.tsx'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { AppQueryKeys } from '@/lib/api/common.api.ts'
@@ -59,7 +59,7 @@ const AccountsTable = ({ accounts }: { accounts?: ValidatedApiCall<Account[]> })
 
 export const AccountsPage = () => {
   const accounts = useQuery({
-    queryKey: [AppQueryKeys.Accounts],
+    queryKey: [AppQueryKeys.AdminAccounts],
     queryFn: () => findAllAccounts(),
     refetchInterval: DataRefetchInterval
   })

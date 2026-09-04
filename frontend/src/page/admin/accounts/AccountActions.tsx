@@ -21,6 +21,7 @@ const EditAccountDialog = ({ open, setOpen, account }: { open: boolean; setOpen:
       if (data.result === 'Ok') {
         setOpen(false)
         queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
+        queryClient.invalidateQueries({ queryKey: [AppQueryKeys.AdminAccounts] })
         return
       }
       setError(data.error || 'A felhasználó szerkesztése sikertelen!')
@@ -61,6 +62,7 @@ export const AccountActions = ({ account }: { account: Account }) => {
     onSuccess: (res) => {
       if (res.result === 'Ok') {
         queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
+        queryClient.invalidateQueries({ queryKey: [AppQueryKeys.AdminAccounts] })
       } else {
         toast({ description: (account.active ? 'Letiltás' : 'Engedélyezés') + ' sikertelen' })
       }
@@ -72,6 +74,7 @@ export const AccountActions = ({ account }: { account: Account }) => {
     onSuccess: (res) => {
       if (res.result === 'Ok') {
         queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
+        queryClient.invalidateQueries({ queryKey: [AppQueryKeys.AdminAccounts] })
         toast({ description: 'A felhasználó törlése sikeres!' })
       } else {
         toast({ description: res.error || 'A felhasználó törlése sikertelen!' })

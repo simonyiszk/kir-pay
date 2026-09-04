@@ -125,6 +125,18 @@ export const exportAccountTemplate = () => httpGet<string>({ url: getUrl('templa
 
 export const exportAccounts = () => httpGet<string>({ url: getUrl('export/accounts'), parseJson: false })
 
+export const findAllAccounts = () =>
+  httpGet<Account[]>({
+    url: getUrl('accounts'),
+    mapResponse: addColorToListResponse
+  })
+
+export const findAccountById = (accountId: number) =>
+  httpGet<Account>({
+    url: getUrl(`accounts/${accountId}`),
+    mapResponse: addColorToResponse
+  })
+
 export const importAccounts = (csv: string, idempotencyKey: string) =>
   httpPost<string, undefined>({ url: getUrl('import/accounts', { idempotencyKey }), data: csv, parseJson: false })
 

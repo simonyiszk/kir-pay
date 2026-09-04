@@ -87,11 +87,10 @@ class ItemService(
     BulkResult::class
   ) {
     val saved = try {
-      itemRepository.saveAll(items.map { it.copy(id = null, version = 0) })
+      itemRepository.saveAll(items.map { it.copy(id = null, version = 0) }).also { itemRepository.flush() }
     } catch (e: DataIntegrityViolationException) {
       throw BadRequestException("A termék név már használatban van!")
     }
-    itemRepository.flush()
     saved.forEach { eventService.logItemCreated(it, getLoggedInPrincipal()?.toRef(), clock.millis()) }
     BulkResult(saved.size)
   }.value

@@ -26,6 +26,7 @@ const CreateAccountDialog = ({ open, setOpen }: { open: boolean; setOpen: (open:
       if (data.result === 'Ok') {
         setOpen(false)
         queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
+        queryClient.invalidateQueries({ queryKey: [AppQueryKeys.AdminAccounts] })
         return
       }
       setError(data.error || 'A felhasználó létrehozása sikertelen!')
@@ -67,6 +68,7 @@ const ImportDialog = ({ open, setOpen }: { open: boolean; setOpen: (open: boolea
         toast({ description: 'Felhasználók importálása sikeres' })
         setOpen(false)
         queryClient.invalidateQueries({ queryKey: [AppQueryKeys.Accounts] })
+        queryClient.invalidateQueries({ queryKey: [AppQueryKeys.AdminAccounts] })
       } else {
         toast({ description: `Hiba a felhasználók importálása közben: ${data.error ?? 'ismeretlen hiba'}` })
       }

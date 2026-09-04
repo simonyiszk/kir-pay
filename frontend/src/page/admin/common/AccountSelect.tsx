@@ -3,12 +3,12 @@ import { AppQueryKeys } from '@/lib/api/common.api.ts'
 import { LoadingIndicator } from '@/components/LoadingIndicator.tsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.tsx'
 import { FormControl } from '@/components/ui/form.tsx'
-import { findAllAccounts } from '@/lib/api/terminal.api.ts'
+import { findAllAccounts } from '@/lib/api/admin.api.ts'
 import { DataRefetchInterval } from '@/page/admin/common/constants.ts'
 
 export const AccountSelect = ({ onAccountSelected }: { onAccountSelected: (accountId: string) => void }) => {
   const accountsQuery = useQuery({
-    queryKey: [AppQueryKeys.Accounts],
+    queryKey: [AppQueryKeys.AdminAccounts],
     queryFn: () => findAllAccounts(),
     refetchInterval: DataRefetchInterval,
     staleTime: DataRefetchInterval

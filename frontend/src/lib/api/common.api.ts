@@ -18,6 +18,7 @@ export const AppQueryKeys = {
   OrderWithOrderLines: 'OrderWithOrderLines',
   Orders: 'Orders',
   Principals: 'Principals',
+  RevenueHeatmap: 'RevenueHeatmap',
   Sessions: 'Sessions',
   Transactions: 'Transactions',
   Vouchers: 'Vouchers'

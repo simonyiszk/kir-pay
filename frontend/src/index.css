@@ -79,6 +79,13 @@
   --input: 15 20% 50%;
   --ring: 15 87.7% 55.3%;
   --radius: 0.5rem;
+
+  --revenue-1: #fbeae5;
+  --revenue-2: #fbcdc0;
+  --revenue-3: #faaf98;
+  --revenue-4: #f88f6f;
+  --revenue-5: #ed6b43;
+  --revenue-6: #d44307;
 }
 
 .dark {
@@ -102,6 +109,13 @@
   --input: 15 20% 18%;
   --ring: 15 87.7% 55.3%;
   --radius: 0.5rem;
+
+  --revenue-1: #2d1b16;
+  --revenue-2: #533025;
+  --revenue-3: #814330;
+  --revenue-4: #b1563b;
+  --revenue-5: #e46740;
+  --revenue-6: #ff7846;
 }
 
 @layer base {

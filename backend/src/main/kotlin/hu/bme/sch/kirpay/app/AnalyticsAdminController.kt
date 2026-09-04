@@ -2,6 +2,7 @@ package hu.bme.sch.kirpay.app
 
 import hu.bme.sch.kirpay.account.AccountService
 import hu.bme.sch.kirpay.common.ADMIN_API
+import hu.bme.sch.kirpay.transaction.RevenueHeatmapEntry
 import hu.bme.sch.kirpay.transaction.TransactionService
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
@@ -33,5 +34,9 @@ class AnalyticsAdminController(
     allUploads = transactionService.getAllUploads(),
     transactionVolume = transactionService.getTransactionVolume()
   )
+
+  @Transactional(readOnly = true)
+  @GetMapping("/analytics/revenue-heatmap")
+  fun getRevenueHeatmap(): List<RevenueHeatmapEntry> = transactionService.revenueHeatmap()
 
 }

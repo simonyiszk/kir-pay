@@ -13,5 +13,6 @@ data class AppConfig(
   val showSetCardTab: Boolean = true,
   val showCartTab: Boolean = true,
   val showTokenTab: Boolean = true,
-  val showTransferTab: Boolean = true
+  val showTransferTab: Boolean = true,
+  val timeZone: String = "Europe/Budapest"
 )

@@ -14,10 +14,21 @@ test.describe('Admin - CSV Import API', () => {
   })
 
   test('POST /import/accounts endpoint exists and processes CSV', async () => {
-    const csv = 'name,email,phone,card,balance,active\nImport Test,,,CARD-IMP-001,500,true'
+    const csv = `name,email,phone,card,balance,active\nImport Test,,,CARD-IMP-${Date.now().toString(36)},500,true`
     const resp = await api.postText('/import/accounts', csv, { idempotencyKey: randomUUID() })
 
-    expect([201, 400]).toContain(resp.status)
+    expect(resp.status).toBe(201)
+  })
+
+  test('POST /import/accounts rejects bad row with 400 and row details', async () => {
+    const csv =
+      `name,email,phone,card,balance,active\nGood Row,,,CARD-GOOD-${Date.now().toString(36)},100,true\n` +
+      `,,,CARD-BAD-${Date.now().toString(36)},100,true`
+    const resp = await api.postText<{ message?: string }>('/import/accounts', csv, { idempotencyKey: randomUUID() })
+
+    expect(resp.status).toBe(400)
+    expect(typeof resp.body.message).toBe('string')
+    expect(resp.body.message).toContain('Sor 2')
   })
 
   test('POST /import/accounts fails without auth (401)', async () => {
@@ -31,6 +42,12 @@ test.describe('Admin - CSV Import API', () => {
     const { status } = await api.postText('/import/items', csv, { idempotencyKey: randomUUID() })
     expect(status).toBeGreaterThanOrEqual(200)
     expect(status).toBeLessThan(300)
+  })
+
+  test('POST /import/items rejects db-violating rows with 400', async () => {
+    const csv = `name,cost,stock,enabled\nBad Stock Item ${Date.now().toString(36)},100,-5,true`
+    const { status } = await api.postText('/import/items', csv, { idempotencyKey: randomUUID() })
+    expect(status).toBe(400)
   })
 
   test('POST /import/items fails without auth (401)', async () => {

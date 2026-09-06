@@ -27,7 +27,7 @@ class WebSecurityConfig {
   @Bean
   fun filterChain(http: HttpSecurity): SecurityFilterChain =
     http.authorizeHttpRequests {
-      it.requestMatchers("/actuator/health/liveness", "/actuator/health/readiness").permitAll()
+      it.requestMatchers("/actuator/health/liveness", "/actuator/health/readiness", "/actuator/prometheus").permitAll()
       it.requestMatchers("/actuator/**").hasRole(Role.ADMIN.name)
       it.requestMatchers("/error").permitAll()
       it.requestMatchers("/v1/api/login", "/v1/api/logout").permitAll()

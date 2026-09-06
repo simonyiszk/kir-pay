@@ -1,5 +1,6 @@
 package hu.bme.sch.kirpay.common
 
+import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -67,6 +68,15 @@ class SessionAuthIntegrationTest {
 
     mockMvc.perform(get("/actuator/health/readiness"))
       .andExpect(status().isOk)
+      .andExpect(cookie().doesNotExist("SESSION"))
+  }
+
+  @Test
+  fun `prometheus metrics are publicly accessible for monitoring`() {
+    mockMvc.perform(get("/actuator/prometheus"))
+      .andExpect(status().isOk)
+      .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
+      .andExpect(content().string(containsString("# HELP")))
       .andExpect(cookie().doesNotExist("SESSION"))
   }
 
